@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} | StudySphere{% endblock %}
+{% block content %}
+<div class="subpage-backbar">
+  <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Default Dashboard</a>
+  <a class="text-action" href="{% url 'home' %}">🏠 Home</a>
+</div>
+<section class="form-card">
+  <p class="eyebrow">CONTRIBUTE TO THE COMMUNITY · +25 LEADERBOARD PTS FOR SHARED NOTES</p>
+  <h1>{{ title }}</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div style="display:flex;gap:12px;align-items:center;margin-top:16px">
+      <button class="button">{{ submit_label }}</button>
+      <a class="button secondary" href="{% url 'dashboard' %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

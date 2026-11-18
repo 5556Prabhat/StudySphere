@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | StudySphere{% endblock %}
+
+{% block content %}
+<!-- C. MAIN HERO SECTION -->
+<section class="saas-hero">
+  <div class="saas-hero-content">
+    <h1 class="saas-hero-heading">
+      Learn Together,<br>
+      Grow <span class="saas-hero-accent">Faster.</span>
+    </h1>
+    <p class="saas-hero-subtitle">
+      A unified platform for study, doubt solving,<br>
+      AI learning and campus collaboration.
+    </p>
+    <div class="saas-hero-actions">
+      <a href="{% url 'material_list' %}" class="saas-btn-primary">
+        Start Studying <span aria-hidden="true">→</span>
+      </a>
+      <a href="{% url 'ai_studio' %}" class="saas-btn-secondary">
+        Explore Features
+      </a>
+    </div>
+  </div>
+
+  <!-- Right Side 3D Academic Illustration (Graduation Cap & Stacked Books) -->
+  <div class="saas-hero-illustration" aria-hidden="true">
+    <svg viewBox="0 0 440 270" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="heroGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#C4B5FD" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#EDE9FE" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="waveGrad1" x1="60" y1="180" x2="420" y2="265" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#DDD6FE" stop-opacity="0.65"/>
+          <stop offset="100%" stop-color="#C4B5FD" stop-opacity="0.9"/>
+        </linearGradient>
+        <linearGradient id="book2Cover" x1="165" y1="150" x2="365" y2="215" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#7C69EF"/>
+          <stop offset="100%" stop-color="#5B46D8"/>
+        </linearGradient>
+        <linearGradient id="book2Spine" x1="160" y1="175" x2="275" y2="245" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#5E48D6"/>
+          <stop offset="100%" stop-color="#4330B5"/>
+        </linearGradient>
+        <linearGradient id="book1Cover" x1="155" y1="108" x2="365" y2="178" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#A78BFA"/>
+          <stop offset="55%" stop-color="#8B5CF6"/>
+          <stop offset="100%" stop-color="#6D3DF2"/>
+        </linearGradient>
+        <linearGradient id="book1Spine" x1="152" y1="138" x2="265" y2="205" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#7C3AED"/>
+          <stop offset="100%" stop-color="#5B21B6"/>
+        </linearGradient>
+        <linearGradient id="pagesGrad" x1="255" y1="145" x2="365" y2="210" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#FFFFFF"/>
+          <stop offset="100%" stop-color="#E2E8F0"/>
+        </linearGradient>
+        <linearGradient id="mortarTop" x1="185" y1="32" x2="395" y2="112" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#3B3566"/>
+          <stop offset="100%" stop-color="#1E1B3A"/>
+        </linearGradient>
+        <linearGradient id="mortarSkull" x1="225" y1="82" x2="345" y2="142" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#35305E"/>
+          <stop offset="100%" stop-color="#1D1936"/>
+        </linearGradient>
+        <linearGradient id="goldTassel" x1="290" y1="70" x2="375" y2="185" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#FBBF24"/>
+          <stop offset="100%" stop-color="#D97706"/>
+        </linearGradient>
+        <linearGradient id="floatCard" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.88"/>
+          <stop offset="100%" stop-color="#EDE9FE" stop-opacity="0.72"/>
+        </linearGradient>
+      </defs>
+
+      <ellipse cx="280" cy="155" rx="155" ry="105" fill="url(#heroGlow)"/>
+      <path d="M55 235C120 190 205 255 295 215C355 188 400 205 435 230L440 270H40L55 235Z" fill="url(#waveGrad1)"/>
+      <ellipse cx="268" cy="224" rx="108" ry="20" fill="#4C1D95" fill-opacity="0.18"/>
+
+      <g transform="translate(105, 42) rotate(-8)">
+        <rect x="0" y="0" width="66" height="58" rx="12" fill="url(#floatCard)" stroke="#FFFFFF" stroke-width="1.5"/>
+        <rect x="13" y="15" width="38" height="5" rx="2.5" fill="#A78BFA" fill-opacity="0.7"/>
+        <rect x="13" y="26" width="42" height="5" rx="2.5" fill="#C4B5FD" fill-opacity="0.8"/>
+        <rect x="13" y="37" width="26" height="5" rx="2.5" fill="#C4B5FD" fill-opacity="0.8"/>
+      </g>
+
+      <!-- Bottom Book -->
+      <path d="M162 196L264 238L368 194L266 154L162 196Z" fill="#4330B5"/>
+      <path d="M264 214L362 173V193L264 234V214Z" fill="url(#pagesGrad)"/>
+      <path d="M266 220L360 180" stroke="#CBD5E1" stroke-width="1.2"/>
+      <path d="M266 226L360 186" stroke="#CBD5E1" stroke-width="1.2"/>
+      <path d="M160 174L264 216V237L160 195C156 193 154 188 154 183C154 178 156 175 160 174Z" fill="url(#book2Spine)"/>
+      <path d="M160 174L264 134L366 173L264 216L160 174Z" fill="url(#book2Cover)"/>
+
+      <!-- Top Purple Book -->
+      <path d="M156 160L260 202L364 159L260 119L156 160Z" fill="#5B21B6"/>
+      <path d="M258 176L358 135V157L258 198V176Z" fill="url(#pagesGrad)"/>
+      <path d="M260 182L356 142" stroke="#CBD5E1" stroke-width="1.3"/>
+      <path d="M260 188L356 148" stroke="#CBD5E1" stroke-width="1.3"/>
+      <path d="M260 193L356 153" stroke="#CBD5E1" stroke-width="1.3"/>
+      <path d="M154 136L258 178V200L154 158C149 156 147 151 147 145C147 140 150 137 154 136Z" fill="url(#book1Spine)"/>
+      <path d="M174 145V166" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-opacity="0.55"/>
+      <path d="M182 148V169" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-opacity="0.55"/>
+      <path d="M154 136L260 95L362 135L258 178L154 136Z" fill="url(#book1Cover)"/>
+      <path d="M166 136L259 100L350 135L258 172L166 136Z" stroke="#DDD6FE" stroke-width="1" stroke-opacity="0.45"/>
+
+      <!-- Floating Note Card 2 -->
+      <g transform="translate(108, 166) rotate(-10)">
+        <rect x="0" y="0" width="54" height="48" rx="10" fill="url(#floatCard)" stroke="#FFFFFF" stroke-width="1.5"/>
+        <rect x="11" y="13" width="30" height="4.5" rx="2.2" fill="#A78BFA" fill-opacity="0.75"/>
+        <rect x="11" y="22" width="33" height="4.5" rx="2.2" fill="#C4B5FD" fill-opacity="0.8"/>
+        <rect x="11" y="31" width="22" height="4.5" rx="2.2" fill="#C4B5FD" fill-opacity="0.8"/>
+      </g>
+
+      <!-- 3D Graduation Cap -->
+      <ellipse cx="282" cy="126" rx="64" ry="18" fill="#2E1065" fill-opacity="0.28"/>
+      <path d="M230 84V116C230 129 254 139 284 139C314 139 338 129 338 116V84L284 106L230 84Z" fill="url(#mortarSkull)"/>
+      <path d="M230 112C230 125 254 135 284 135C314 135 338 125 338 112" stroke="#4C4480" stroke-width="1.5"/>
+      <path d="M182 67L286 105L392 71V77L286 112L182 73V67Z" fill="#141129"/>
+      <path d="M182 67L286 33L392 71L286 105L182 67Z" fill="url(#mortarTop)"/>
+      <ellipse cx="286" cy="69" rx="6.5" ry="4" fill="#2D2754" stroke="#6366F1" stroke-width="1"/>
+      <path d="M286 69C312 76 340 86 356 97C362 101 364 118 364 148" stroke="url(#goldTassel)" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="364" cy="147" r="4" fill="#F59E0B"/>
+      <path d="M360 150L356 177H372L368 150H360Z" fill="url(#goldTassel)"/>
+    </svg>
+  </div>
+</section>
+
+<!-- D. STATISTICS SECTION -->
+<section class="saas-stats-grid" aria-label="Platform Statistics">
+  <div class="saas-stat-card">
+    <div class="saas-stat-icon icon-purple" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    </div>
+    <div class="saas-stat-info">
+      <strong class="saas-stat-value">{{ group_count }}</strong>
+      <span class="saas-stat-label">Active Groups</span>
+    </div>
+  </div>
+
+  <div class="saas-stat-card">
+    <div class="saas-stat-icon icon-blue" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/>
+        <path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/>
+      </svg>
+    </div>
+    <div class="saas-stat-info">
+      <strong class="saas-stat-value">{{ all_shared_notes|length|default:my_material_count }}</strong>
+      <span class="saas-stat-label">Notes Shared</span>
+    </div>
+  </div>
+
+  <div class="saas-stat-card">
+    <div class="saas-stat-icon icon-purple-soft" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    </div>
+    <div class="saas-stat-info">
+      <strong class="saas-stat-value">{{ leaderboard|length }}</strong>
+      <span class="saas-stat-label">Students</span>
+    </div>
+  </div>
+
+  <div class="saas-stat-card">
+    <div class="saas-stat-icon icon-amber" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+        <path d="M18 2H6v2H3.5A2.5 2.5 0 0 0 1 6.5c0 2.26 1.51 4.17 3.58 4.79A6.99 6.99 0 0 0 11 15.92V19H7v2h10v-2h-4v-3.08a6.99 6.99 0 0 0 6.42-4.63C21.49 10.67 23 8.76 23 6.5A2.5 2.5 0 0 0 20.5 4H18V2Zm-12 7.1A3.01 3.01 0 0 1 3 6.5C3 5.95 3.45 5.5 4 5.5H6v3.6Zm14-3.6c.55 0 1 .45 1 1 0 1.24-.75 2.3-1.82 2.76.08-.44.12-.89.12-1.36V5.5h.7Z"/>
+      </svg>
+    </div>
+    <div class="saas-stat-info">
+      <strong class="saas-stat-value">#{{ my_rank_entry.rank|default:"1" }}</strong>
+      <span class="saas-stat-label">Campus Rank</span>
+    </div>
+  </div>
+</section>
+
+<!-- E. QUICK ACCESS SECTION -->
+<section class="saas-quick-section" aria-label="Quick Access">
+  <div class="saas-section-header">
+    <h2 class="saas-section-title">Quick Access</h2>
+    <a href="{% url 'material_list' %}" class="saas-view-all-link">View All <span aria-hidden="true">→</span></a>
+  </div>
+
+  <div class="saas-quick-grid">
+    <!-- 1. Global Doubt (GC) -->
+    <a href="{% url 'global_chat' %}" class="saas-quick-card">
+      <div class="saas-quick-icon q-green" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <line x1="8" y1="9" x2="16" y2="9"/>
+          <line x1="8" y1="13" x2="12" y2="13"/>
+        </svg>
+      </div>
+      <h3 class="saas-quick-title">Global Doubt (GC)</h3>
+      <p class="saas-quick-meta">
+        <span class="saas-live-dot"></span>
+        <span class="saas-live-text">Live</span>
+        <span class="saas-dot-sep">•</span>
+        <span>{{ global_group.members.count|default:leaderboard|length }} online</span>
+      </p>
+    </a>
+
+    <!-- 2. AI Study Assistant -->
+    <a href="{% url 'ai_studio' %}" class="saas-quick-card">
+      <div class="saas-quick-icon q-purple" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 3.5L11.5 7.8L15.8 9.3L11.5 10.8L10 15.1L8.5 10.8L4.2 9.3L8.5 7.8L10 3.5Z"/>
+          <path d="M18 13L18.8 15.2L21 16L18.8 16.8L18 19L17.2 16.8L15 16L17.2 15.2L18 13Z"/>
+        </svg>
+      </div>
+      <h3 class="saas-quick-title">AI Study Assistant</h3>
+      <p class="saas-quick-meta">Ask · Summarize · Explain</p>
+    </a>
+
+    <!-- 3. Shared Notes -->
+    <a href="{% url 'material_list' %}" class="saas-quick-card">
+      <div class="saas-quick-icon q-amber" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </div>
+      <h3 class="saas-quick-title">Shared Notes</h3>
+      <p class="saas-quick-meta">Verified by peers</p>
+    </a>
+
+    <!-- 4. Study Lounge -->
+    <a href="{% url 'group_list' %}" class="saas-quick-card">
+      <div class="saas-quick-icon q-purple" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </div>
+      <h3 class="saas-quick-title">Study Lounge</h3>
+      <p class="saas-quick-meta">Real-time learning</p>
+    </a>
+  </div>
+</section>
+
+<!-- Screen-reader accessible links preserving existing functionality & dynamic context bindings -->
+<div class="saas-sr-only" aria-hidden="false">
+  <a href="{% url 'material_create' %}">Share Notes</a>
+  <a href="{% url 'material_list' %}">Shared Notes by Other Users</a>
+  <a href="{% url 'global_chat' %}">Global Doubt &amp; Study Lounge</a>
+  <a href="{% url 'leaderboard' %}">Contribution Leaderboard</a>
+  <a href="{% url 'saved_materials' %}">Saved Resources</a>
+  {% for item in other_users_notes %}
+    <span>{{ item.title }}</span>
+  {% endfor %}
+</div>
+{% endblock %}

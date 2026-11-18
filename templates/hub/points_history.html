@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% block title %}Points History | StudySphere{% endblock %}
+{% block content %}
+
+<div class="subpage-backbar">
+  <a class="button small secondary" href="{% url 'leaderboard' %}">← Back to Leaderboard</a>
+  <a class="text-action" href="{% url 'dashboard' %}">Dashboard →</a>
+</div>
+
+<div class="page-heading" style="margin-top:16px">
+  <div>
+    <p class="eyebrow">CENTRALIZED CONTRIBUTION LEDGER</p>
+    <h1>📜 Points History{% if target_user != user %} — @{{ target_user.username }}{% endif %}</h1>
+    <p class="lead">Transparent audit log of every point earned, verified solution rewarded, and moderation adjustment.</p>
+  </div>
+</div>
+
+<!-- THREE NAVIGATION TABS: 1) Leaderboard, 2) How to Earn Points, 3) Points History -->
+<div class="gc-tabs-bar" role="tablist" aria-label="Leaderboard Navigation">
+  <a href="{% url 'leaderboard' %}" class="gc-tab-btn" style="text-decoration:none">
+    <span class="gc-tab-icon">🏆</span>
+    <span>Leaderboard</span>
+  </a>
+
+  <a href="{% url 'leaderboard' %}?tab=earn" class="gc-tab-btn" style="text-decoration:none">
+    <span class="gc-tab-icon">📖</span>
+    <span>How to Earn Points</span>
+  </a>
+
+  <a href="{% url 'points_history' %}" class="gc-tab-btn active" style="text-decoration:none" aria-current="page">
+    <span class="gc-tab-icon">📜</span>
+    <span>Points History</span>
+    <span class="gc-tab-pill reward">{{ summary.total_points }} pts</span>
+  </a>
+</div>
+
+<!-- 4 SUMMARY CARDS -->
+<section class="saas-stats-grid" aria-label="Points Summary">
+  <div class="saas-stat-card">
+    <div class="saas-stat-icon icon-purple" aria-hidden="true">🏆</div>
+    <div class="saas-stat-info">
+      <strong class="saas-stat-value">{{ summary.total_points }}</strong>
+      <span class="saas-stat-label">Total Points</span>
+    </div>
+  </div>
+
+  <div class="saas-stat-card">
+    <div class="saas-stat-icon" style="background:#ECFDF5;color:#059669" aria-hidden="true">＋</div>
+    <div class="saas-stat-info">
+      <strong class="saas-stat-value" style="color:#059669">+{{ summary.points_earned }}</strong>
+      <span class="saas-stat-label">Points Earned</span>
+    </div>
+  </div>
+
+  <div class="saas-stat-card">
+    <div class="saas-stat-icon" style="background:#FEF2F2;color:#DC2626" aria-hidden="true">－</div>
+    <div class="saas-stat-info">
+      <strong class="saas-stat-value" style="color:#DC2626">-{{ summary.points_deducted }}</strong>
+      <span class="saas-stat-label">Points Deducted</span>
+    </div>
+  </div>
+
+  <div class="saas-stat-card">
+    <div class="saas-stat-icon icon-blue" aria-hidden="true">⚡</div>
+    <div class="saas-stat-info">
+      <strong class="saas-stat-value">{{ summary.total_contributions }}</strong>
+      <span class="saas-stat-label">Total Contributions</span>
+    </div>
+  </div>
+</section>
+
+<!-- FILTER & SEARCH BAR -->
+<section class="panel" style="margin-bottom:22px">
+  <form method="get" class="tx-filter-form">
+    {% if target_user != user %}
+      <input type="hidden" name="user_id" value="{{ target_user.pk }}">
+    {% endif %}
+    <div class="tx-filter-grid">
+      <div>
+        <label for="tx-q">Search Description</label>
+        <input id="tx-q" type="text" name="q" value="{{ search_q }}" placeholder="Search notes, doubts, quizzes…">
+      </div>
+      <div>
+        <label for="tx-activity">Activity Type</label>
+        <select id="tx-activity" name="activity_type">
+          <option value="">All Activities</option>
+          {% for code, label in activity_choices %}
+            <option value="{{ code }}" {% if selected_activity == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="tx-status">Status</label>
+        <select id="tx-status" name="status">
+          <option value="">All Statuses</option>
+          {% for code, label in status_choices %}
+            <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="tx-from">From Date</label>
+        <input id="tx-from" type="date" name="date_from" value="{{ date_from }}">
+      </div>
+      <div>
+        <label for="tx-to">To Date</label>
+        <input id="tx-to" type="date" name="date_to" value="{{ date_to }}">
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px">
+      <span class="subtle" style="font-size:13px">Click any transaction row below to inspect full audit details.</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <a href="{% url 'points_history' %}{% if target_user != user %}?user_id={{ target_user.pk }}{% endif %}" class="button small secondary">Clear Filters</a>
+        <button type="submit" class="button small">Apply Filters</button>
+      </div>
+    </div>
+  </form>
+</section>
+
+<!-- TRANSACTION HISTORY TABLE -->
+<section class="panel">
+  {% if transactions %}
+    <div class="tx-table-wrap">
+      <table class="tx-table">
+        <thead>
+          <tr>
+            <th>Activity</th>
+            <th>Description</th>
+            <th>Date &amp; Time</th>
+            <th>Points</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in transactions %}
+            <tr class="tx-row" onclick="toggleTxDetail('tx-detail-{{ tx.pk }}')" style="cursor:pointer" title="Click to view details">
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span class="tx-act-icon">
+                    {% if tx.activity_type == 'NOTE_SHARED' %}📤
+                    {% elif tx.activity_type == 'RESOURCE_REVIEW' %}⭐
+                    {% elif tx.activity_type == 'DOUBT_SOLVED' %}🎓
+                    {% elif tx.activity_type == 'MATERIAL_COMPLETED' %}✅
+                    {% elif tx.activity_type == 'QUIZ_COMPLETED' %}✨
+                    {% elif tx.activity_type == 'REWARD_REVOKED' %}⚠️
+                    {% else %}🛡️{% endif %}
+                  </span>
+                  <b>{{ tx.get_activity_type_display }}</b>
+                </div>
+              </td>
+              <td>
+                <span>{{ tx.description }}</span>
+                {% if tx.revoked_reason %}
+                  <small style="display:block;color:#DC2626;margin-top:2px">Reason: {{ tx.revoked_reason }}</small>
+                {% endif %}
+              </td>
+              <td style="white-space:nowrap;color:var(--saas-text-secondary);font-size:13.5px">
+                {{ tx.created_at|date:"M j, Y · g:i A" }}
+              </td>
+              <td>
+                {% if tx.points > 0 %}
+                  <span class="tx-pts earned">+{{ tx.points }}</span>
+                {% elif tx.points < 0 %}
+                  <span class="tx-pts deducted">{{ tx.points }}</span>
+                {% else %}
+                  <span class="tx-pts neutral">0</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if tx.status == 'approved' %}
+                  <span class="tx-status approved">Approved</span>
+                {% elif tx.status == 'pending' %}
+                  <span class="tx-status pending">Pending</span>
+                {% else %}
+                  <span class="tx-status revoked">Revoked</span>
+                {% endif %}
+              </td>
+            </tr>
+
+            <!-- Expandable Transaction Detail Drawer -->
+            <tr id="tx-detail-{{ tx.pk }}" class="tx-detail-row" style="display:none">
+              <td colspan="5">
+                <div class="tx-detail-box">
+                  <div class="tx-detail-grid">
+                    <div>
+                      <small class="eyebrow">TRANSACTION ID</small>
+                      <strong>#{{ tx.pk }} ({{ tx.transaction_key }})</strong>
+                    </div>
+                    <div>
+                      <small class="eyebrow">RECORDED AT</small>
+                      <strong>{{ tx.created_at|date:"F j, Y, g:i A" }}</strong>
+                    </div>
+                    <div>
+                      <small class="eyebrow">AWARDED POINTS</small>
+                      <strong>{% if tx.points > 0 %}+{% endif %}{{ tx.points }} pts</strong>
+                    </div>
+                    <div>
+                      <small class="eyebrow">LEDGER STATUS</small>
+                      <strong>{{ tx.get_status_display }}</strong>
+                    </div>
+
+                    {% if tx.activity_type == 'DOUBT_SOLVED' or tx.metadata.doubt_title %}
+                      <div>
+                        <small class="eyebrow">RELATED DOUBT TITLE</small>
+                        <strong>{{ tx.metadata.doubt_title|default:tx.description }}</strong>
+                      </div>
+                      <div>
+                        <small class="eyebrow">SUBJECT</small>
+                        <strong>{{ tx.metadata.subject|default:"Academic" }}</strong>
+                      </div>
+                      <div>
+                        <small class="eyebrow">STUDENT WHO ASKED</small>
+                        <strong>@{{ tx.metadata.asked_by|default:"Classmate" }}</strong>
+                      </div>
+                      <div>
+                        <small class="eyebrow">ACCEPTED-ANSWER STATUS</small>
+                        <strong>{{ tx.metadata.accepted_status|default:"Verified & Accepted" }}</strong>
+                      </div>
+                    {% endif %}
+
+                    {% if tx.revoked_reason %}
+                      <div style="grid-column:1 / -1">
+                        <small class="eyebrow" style="color:#DC2626">MODERATOR REVOCATION REASON</small>
+                        <strong style="color:#DC2626">{{ tx.revoked_reason }}{% if tx.revoked_at %} ({{ tx.revoked_at|date:"M j, Y, g:i A" }}){% endif %}</strong>
+                      </div>
+                    {% endif %}
+                  </div>
+
+                  {% if user.is_staff and tx.points > 0 and tx.status == 'approved' %}
+                    <form method="post" action="{% url 'revoke_transaction' tx.pk %}" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--saas-border);display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                      {% csrf_token %}
+                      <input type="text" name="reason" placeholder="Reason for revoking this reward…" style="max-width:320px;padding:7px 12px;font-size:13px" required>
+                      <button type="submit" class="button small secondary" style="color:#DC2626;border-color:#FECACA">Revoke Reward (-{{ tx.points }} pts)</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+      <div class="tx-pagination">
+        {% if page_obj.has_previous %}
+          <a class="button small secondary" href="?page={{ page_obj.previous_page_number }}&amp;activity_type={{ selected_activity }}&amp;status={{ selected_status }}&amp;date_from={{ date_from }}&amp;date_to={{ date_to }}&amp;q={{ search_q }}{% if target_user != user %}&amp;user_id={{ target_user.pk }}{% endif %}">← Previous</a>
+        {% endif %}
+        <span class="subtle" style="font-size:13.5px;font-weight:600">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+          <a class="button small secondary" href="?page={{ page_obj.next_page_number }}&amp;activity_type={{ selected_activity }}&amp;status={{ selected_status }}&amp;date_from={{ date_from }}&amp;date_to={{ date_to }}&amp;q={{ search_q }}{% if target_user != user %}&amp;user_id={{ target_user.pk }}{% endif %}">Next →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    <!-- Points History Empty State -->
+    <div style="text-align:center;padding:48px 24px">
+      <div style="font-size:38px;margin-bottom:10px">📜</div>
+      <h2 style="margin-bottom:8px">No contribution history yet.</h2>
+      <p class="subtle" style="max-width:500px;margin:0 auto 22px">
+        Start sharing notes, completing quizzes, and helping classmates to earn your first StudySphere points.
+      </p>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+        <a class="button" href="{% url 'material_list' %}">Explore Learning Activities →</a>
+        <a class="button secondary" href="{% url 'global_chat' %}?tab=doubts">Solve Academic Doubts (+20 pts)</a>
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+<script>
+  function toggleTxDetail(rowId) {
+    const el = document.getElementById(rowId);
+    if (!el) return;
+    el.style.display = (el.style.display === 'none' || !el.style.display) ? 'table-row' : 'none';
+  }
+</script>
+{% endblock %}

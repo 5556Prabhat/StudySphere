@@ -1,0 +1,961 @@
+{% extends 'base.html' %}
+{% block title %}StudySphere | Learn Together, Grow Faster{% endblock %}
+{% block content %}
+
+<!-- =====================================================================
+     3. HERO SECTION — TYPEWRITER EFFECT & FLOATING 3D ILLUSTRATION
+     ===================================================================== -->
+<section class="lp-hero" id="hero">
+  <div class="lp-hero-bg-mesh" aria-hidden="true">
+    <div class="lp-orb lp-orb-1" data-parallax="0.04"></div>
+    <div class="lp-orb lp-orb-2" data-parallax="-0.03"></div>
+  </div>
+
+  <div class="lp-container lp-hero-grid">
+    <!-- Left Column: Copy, Typewriter & CTAs -->
+    <div class="lp-hero-copy lp-reveal">
+      <div class="lp-eyebrow-pill">
+        <span class="lp-pill-dot"></span>
+        <span>Intelligent Campus Learning Ecosystem</span>
+      </div>
+
+      <h1 class="lp-hero-title">
+        Learn Together,<br>
+        <span class="lp-purple-gradient">Grow Faster.</span>
+      </h1>
+
+      <!-- Fixed-height Typewriter Row (Zero Layout Shift) -->
+      <div class="lp-typewriter-wrap" aria-live="polite">
+        <span class="lp-typewriter-prefix">Built to help you</span>
+        <span class="lp-typewriter-box">
+          <span id="lp-typed-target">Learn Smarter with AI</span><span class="lp-typed-cursor" aria-hidden="true">|</span>
+        </span>
+      </div>
+
+      <p class="lp-hero-description">
+        An intelligent collaborative learning platform built for students to share knowledge, solve doubts, discover resources, and grow together.
+      </p>
+
+      <div class="lp-hero-cta-row">
+        <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'signup' %}{% endif %}" class="lp-btn-primary lp-btn-lg">
+          <span>Explore StudySphere</span>
+          <span aria-hidden="true">→</span>
+        </a>
+        <a href="#how-it-works" class="lp-btn-secondary lp-btn-lg">
+          <span>How It Works</span>
+        </a>
+      </div>
+
+      <div class="lp-hero-trust-row">
+        <div class="lp-trust-item">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="#7045F5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+          <span>Real-Time WebSocket GC</span>
+        </div>
+        <div class="lp-trust-item">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="#7045F5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+          <span>AI Auto-Graded Quizzes</span>
+        </div>
+        <div class="lp-trust-item">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="#7045F5"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/></svg>
+          <span>PDF, DOCX &amp; PPTX Extraction</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Large Educational Illustration + Floating UI Cards -->
+    <div class="lp-hero-visual lp-reveal" id="lp-hero-parallax">
+      <div class="lp-hero-stage">
+        <!-- Main 3D Academic Illustration (Graduation Cap, Books & AI Symbols) -->
+        <div class="lp-hero-svg-card" data-parallax="0.02">
+          <svg viewBox="0 0 480 340" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="lpStageGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#7045F5" stop-opacity="0.24"/>
+                <stop offset="100%" stop-color="#F0EDFF" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="lpBookBottom" x1="150" y1="185" x2="375" y2="255" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#7C5DFA"/>
+                <stop offset="100%" stop-color="#5332D6"/>
+              </linearGradient>
+              <linearGradient id="lpBookTop" x1="145" y1="140" x2="375" y2="215" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#A78BFA"/>
+                <stop offset="50%" stop-color="#7045F5"/>
+                <stop offset="100%" stop-color="#5B2EE8"/>
+              </linearGradient>
+              <linearGradient id="lpCapTop" x1="175" y1="45" x2="400" y2="130" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#362F5F"/>
+                <stop offset="100%" stop-color="#191530"/>
+              </linearGradient>
+              <linearGradient id="lpGold" x1="280" y1="80" x2="380" y2="210" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FBBF24"/>
+                <stop offset="100%" stop-color="#D97706"/>
+              </linearGradient>
+            </defs>
+
+            <ellipse cx="265" cy="185" rx="185" ry="125" fill="url(#lpStageGlow)"/>
+            <ellipse cx="265" cy="268" rx="125" ry="22" fill="#4C1D95" fill-opacity="0.14"/>
+
+            <!-- Bottom 3D Book -->
+            <path d="M152 232L264 278L378 230L266 186L152 232Z" fill="#4326B8"/>
+            <path d="M264 252L372 208V230L264 274V252Z" fill="#F8FAFC"/>
+            <path d="M266 258L368 216" stroke="#CBD5E1" stroke-width="1.4"/>
+            <path d="M266 265L368 223" stroke="#CBD5E1" stroke-width="1.4"/>
+            <path d="M150 208L264 254V276L150 230C145 227 143 222 143 217C143 212 146 209 150 208Z" fill="#5332D6"/>
+            <path d="M150 208L264 164L376 207L264 254L150 208Z" fill="url(#lpBookBottom)"/>
+
+            <!-- Top 3D Book -->
+            <path d="M146 192L260 238L374 191L260 147L146 192Z" fill="#4C1D95"/>
+            <path d="M258 210L368 166V190L258 234V210Z" fill="#FFFFFF"/>
+            <path d="M260 217L364 174" stroke="#CBD5E1" stroke-width="1.4"/>
+            <path d="M260 224L364 181" stroke="#CBD5E1" stroke-width="1.4"/>
+            <path d="M144 166L258 212V236L144 190C139 187 137 182 137 176C137 170 140 167 144 166Z" fill="#6336E8"/>
+            <path d="M144 166L260 121L372 165L258 212L144 166Z" fill="url(#lpBookTop)"/>
+
+            <!-- 3D Graduation Cap -->
+            <ellipse cx="282" cy="156" rx="70" ry="20" fill="#2E1065" fill-opacity="0.26"/>
+            <path d="M224 108V144C224 158 251 170 284 170C317 170 344 158 344 144V108L284 132L224 108Z" fill="#27224A"/>
+            <path d="M172 90L286 132L402 94V101L286 139L172 97V90Z" fill="#131026"/>
+            <path d="M172 90L286 52L402 94L286 132L172 90Z" fill="url(#lpCapTop)"/>
+            <ellipse cx="286" cy="92" rx="7" ry="4.5" fill="#312B5B" stroke="#8B5CF6" stroke-width="1.2"/>
+            <path d="M286 92C315 100 345 110 362 122C369 127 371 146 371 178" stroke="url(#lpGold)" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="371" cy="177" r="4.5" fill="#F59E0B"/>
+            <path d="M366 180L362 210H380L376 180H366Z" fill="url(#lpGold)"/>
+          </svg>
+        </div>
+
+        <!-- Floating Card 1: AI Study Studio -->
+        <div class="lp-float-card lp-float-ai" data-parallax="0.05">
+          <div class="lp-float-icon lp-icon-violet">✨</div>
+          <div>
+            <strong>AI Study Studio</strong>
+            <span>Summary &amp; 5-Q Quiz Ready</span>
+          </div>
+        </div>
+
+        <!-- Floating Card 2: Live Doubt Chat -->
+        <div class="lp-float-card lp-float-chat" data-parallax="-0.04">
+          <div class="lp-float-icon lp-icon-emerald">💬</div>
+          <div>
+            <strong>Global Doubt Chat</strong>
+            <span><i class="saas-live-dot"></i> Live · {{ total_users }} students connected</span>
+          </div>
+        </div>
+
+        <!-- Floating Card 3: Leaderboard Badge -->
+        <div class="lp-float-card lp-float-rank" data-parallax="0.03">
+          <div class="lp-float-icon lp-icon-amber">🏆</div>
+          <div>
+            <strong>+25 Points Earned</strong>
+            <span>Note Verified by Peers</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     4. HORIZONTAL SCROLLING FEATURE SHOWCASE (GSAP SCROLLTRIGGER)
+     ===================================================================== -->
+<section class="lp-hscroll-section" id="facilities">
+  <div class="lp-hscroll-pin" id="lp-hscroll-pin">
+    <div class="lp-container">
+      <div class="lp-hscroll-header">
+        <div>
+          <span class="lp-section-tag">PLATFORM CAPABILITIES</span>
+          <h2 class="lp-section-heading">Everything You Need to Learn Smarter.</h2>
+          <p class="lp-section-subtitle">One platform. Multiple possibilities. Unlimited learning.</p>
+        </div>
+        <div class="lp-hscroll-progress-wrap" aria-hidden="true">
+          <span class="lp-hscroll-hint">Scroll to explore features →</span>
+          <div class="lp-hscroll-bar">
+            <div class="lp-hscroll-bar-fill" id="lp-hscroll-bar-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lp-hscroll-viewport" id="lp-hscroll-viewport">
+      <div class="lp-hscroll-track" id="lp-hscroll-track">
+        <!-- Card 1: Global Doubt Chat -->
+        <a href="{% url 'global_chat' %}" class="lp-feature-hcard">
+          <div class="lp-hcard-top">
+            <span class="lp-hcard-icon hcard-emerald">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg>
+            </span>
+            <span class="lp-hcard-badge badge-emerald"><i class="saas-live-dot"></i> Live WebSockets</span>
+          </div>
+          <h3>Global Doubt Chat</h3>
+          <p>Connect with students and solve academic doubts in real time.</p>
+          <div class="lp-hcard-footer">
+            <span>+10 pts per doubt helped</span>
+            <span class="lp-hcard-arrow">→</span>
+          </div>
+        </a>
+
+        <!-- Card 2: AI Study Studio -->
+        <a href="{% url 'ai_studio' %}" class="lp-feature-hcard">
+          <div class="lp-hcard-top">
+            <span class="lp-hcard-icon hcard-violet">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5L11.5 7.8L15.8 9.3L11.5 10.8L10 15.1L8.5 10.8L4.2 9.3L8.5 7.8L10 3.5Z"/><path d="M18 13L18.8 15.2L21 16L18.8 16.8L18 19L17.2 16.8L15 16L17.2 15.2L18 13Z"/></svg>
+            </span>
+            <span class="lp-hcard-badge badge-violet">AI Copilot</span>
+          </div>
+          <h3>AI Study Studio</h3>
+          <p>Generate summaries, explanations, questions, and interactive quizzes.</p>
+          <div class="lp-hcard-footer">
+            <span>Instant auto-grading</span>
+            <span class="lp-hcard-arrow">→</span>
+          </div>
+        </a>
+
+        <!-- Card 3: Shared Notes & Resources -->
+        <a href="{% url 'material_list' %}" class="lp-feature-hcard">
+          <div class="lp-hcard-top">
+            <span class="lp-hcard-icon hcard-blue">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>
+            </span>
+            <span class="lp-hcard-badge badge-blue">PDF · DOCX · PPTX</span>
+          </div>
+          <h3>Shared Notes &amp; Resources</h3>
+          <p>Discover, upload, and share useful learning materials.</p>
+          <div class="lp-hcard-footer">
+            <span>+25 pts per note shared</span>
+            <span class="lp-hcard-arrow">→</span>
+          </div>
+        </a>
+
+        <!-- Card 4: Study Lounge -->
+        <a href="{% url 'global_chat' %}" class="lp-feature-hcard">
+          <div class="lp-hcard-top">
+            <span class="lp-hcard-icon hcard-indigo">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
+            <span class="lp-hcard-badge badge-violet">Always Open</span>
+          </div>
+          <h3>Study Lounge</h3>
+          <p>Collaborate with classmates through real-time conversations.</p>
+          <div class="lp-hcard-footer">
+            <span>Campus-wide default room</span>
+            <span class="lp-hcard-arrow">→</span>
+          </div>
+        </a>
+
+        <!-- Card 5: Smart Campus Collaboration -->
+        <a href="{% url 'group_list' %}" class="lp-feature-hcard">
+          <div class="lp-hcard-top">
+            <span class="lp-hcard-icon hcard-emerald">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </span>
+            <span class="lp-hcard-badge badge-emerald">Subject Circles</span>
+          </div>
+          <h3>Smart Campus Collaboration</h3>
+          <p>Build learning communities and connect with fellow students.</p>
+          <div class="lp-hcard-footer">
+            <span>{{ total_groups }} active groups</span>
+            <span class="lp-hcard-arrow">→</span>
+          </div>
+        </a>
+
+        <!-- Card 6: Campus Leaderboard -->
+        <a href="{% url 'leaderboard' %}" class="lp-feature-hcard">
+          <div class="lp-hcard-top">
+            <span class="lp-hcard-icon hcard-amber">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            </span>
+            <span class="lp-hcard-badge badge-amber">Merit Standings</span>
+          </div>
+          <h3>Campus Leaderboard</h3>
+          <p>Track your progress, earn points, and climb the rankings.</p>
+          <div class="lp-hcard-footer">
+            <span>Unlock Grandmaster badges</span>
+            <span class="lp-hcard-arrow">→</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     5. HOW STUDYSPHERE WORKS — INTERACTIVE 4-STEP TIMELINE
+     ===================================================================== -->
+<section class="lp-timeline-section" id="how-it-works">
+  <div class="lp-container">
+    <div class="lp-center-header lp-reveal">
+      <span class="lp-section-tag">STEP-BY-STEP WORKFLOW</span>
+      <h2 class="lp-section-heading">Your Journey to Smarter Learning</h2>
+      <p class="lp-section-subtitle">Four connected stages designed to turn isolated studying into collaborative mastery.</p>
+    </div>
+
+    <div class="lp-timeline" id="lp-timeline">
+      <div class="lp-timeline-line" aria-hidden="true">
+        <div class="lp-timeline-line-fill" id="lp-timeline-line-fill"></div>
+      </div>
+
+      <!-- Step 01 -->
+      <div class="lp-timeline-item lp-reveal">
+        <div class="lp-timeline-node">01</div>
+        <div class="lp-timeline-card">
+          <span class="lp-step-pill">STEP 01 · ONBOARDING</span>
+          <h3>Join Your Campus Workspace</h3>
+          <p>Sign up and access your personalized study environment with active study streaks, spaced-repetition schedules, and live campus rank tracking.</p>
+        </div>
+      </div>
+
+      <!-- Step 02 -->
+      <div class="lp-timeline-item lp-reveal">
+        <div class="lp-timeline-node">02</div>
+        <div class="lp-timeline-card">
+          <span class="lp-step-pill">STEP 02 · KNOWLEDGE SHARING</span>
+          <h3>Share &amp; Discover Notes</h3>
+          <p>Upload, explore, and learn from peer-shared resources in PDF, Word, PowerPoint, or Markdown formats—earning +25 Leaderboard points per share.</p>
+        </div>
+      </div>
+
+      <!-- Step 03 -->
+      <div class="lp-timeline-item lp-reveal">
+        <div class="lp-timeline-node">03</div>
+        <div class="lp-timeline-card">
+          <span class="lp-step-pill">STEP 03 · REAL-TIME PEER HELP</span>
+          <h3>Solve Doubts Together</h3>
+          <p>Connect with students through Global Doubt Chat and Study Lounge to ask tough subject questions and clear classmates' doubts in real time.</p>
+        </div>
+      </div>
+
+      <!-- Step 04 -->
+      <div class="lp-timeline-item lp-reveal">
+        <div class="lp-timeline-node">04</div>
+        <div class="lp-timeline-card">
+          <span class="lp-step-pill">STEP 04 · AI MASTERY</span>
+          <h3>Practice with AI &amp; Grow</h3>
+          <p>Use AI-generated summaries, questions, and auto-graded quizzes to improve learning retention and climb the Campus Leaderboard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     6. FEATURE SPOTLIGHT — LARGE ALTERNATING PRODUCT SHOWCASES
+     ===================================================================== -->
+<section class="lp-spotlights-section" id="spotlights">
+  <div class="lp-container">
+    <div class="lp-center-header lp-reveal">
+      <span class="lp-section-tag">INSIDE THE PLATFORM</span>
+      <h2 class="lp-section-heading">Built for Deep Academic Focus</h2>
+      <p class="lp-section-subtitle">Explore how each StudySphere module works together inside your student workspace.</p>
+    </div>
+
+    <!-- Spotlight A: AI Study Studio (Text Left, Visual Right) -->
+    <div class="lp-spotlight-row lp-reveal">
+      <div class="lp-spotlight-copy">
+        <div class="lp-spotlight-icon hcard-violet">✨</div>
+        <span class="lp-section-tag">AI STUDY STUDIO</span>
+        <h3>Turn Long Chapters Into Instant Summaries &amp; Auto-Graded Quizzes</h3>
+        <p>Select any uploaded resource or paste your lecture notes. StudySphere extracts the text and transforms it into structured study summaries, key exam questions, simple analogies, or interactive multiple-choice quizzes.</p>
+        <ul class="lp-benefit-list">
+          <li>Automatic text extraction from PDF, DOCX, PPTX, and Markdown uploads</li>
+          <li>Four dedicated modes: Summary, Important Questions, Simple Explanation, and Practice Quiz</li>
+          <li>Instant server-side quiz auto-grading with answer explanations and score tracking</li>
+        </ul>
+        <a href="{% url 'ai_studio' %}" class="lp-btn-primary">Explore AI Studio →</a>
+      </div>
+      <div class="lp-spotlight-mockup">
+        <div class="lp-ui-window">
+          <div class="lp-ui-bar">
+            <span class="lp-dot red"></span><span class="lp-dot yellow"></span><span class="lp-dot green"></span>
+            <span class="lp-ui-title">StudySphere · AI Study Studio</span>
+          </div>
+          <div class="lp-ui-body">
+            <div class="lp-mock-tabs">
+              <span>Summary</span>
+              <span>Key Questions</span>
+              <span>Explain Simply</span>
+              <span class="active">Auto-Graded Quiz</span>
+            </div>
+            <div class="lp-mock-quiz-box">
+              <small class="lp-mock-eyebrow">QUESTION 1 OF 5 · GRAPH ALGORITHMS</small>
+              <p class="lp-mock-q">Which algorithm guarantees the shortest path in a weighted graph containing negative edge weights (without negative cycles)?</p>
+              <div class="lp-mock-choice correct">✓ A) Bellman-Ford Algorithm (Correct · +20%)</div>
+              <div class="lp-mock-choice">B) Dijkstra's Greedy Algorithm</div>
+              <div class="lp-mock-choice">C) Kruskal's Spanning Tree</div>
+              <div class="lp-mock-explain">Explanation: Bellman-Ford relaxes all edges V−1 times, accurately handling negative weights.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spotlight B: Global Doubt Chat (Visual Left, Text Right) -->
+    <div class="lp-spotlight-row lp-reverse lp-reveal">
+      <div class="lp-spotlight-copy">
+        <div class="lp-spotlight-icon hcard-emerald">💬</div>
+        <span class="lp-section-tag">GLOBAL DOUBT CHAT</span>
+        <h3>Never Get Stuck Studying Alone at Night Again</h3>
+        <p>Every student is automatically enrolled in the campus-wide Global Doubt &amp; Study Lounge. Post a question from any course and get real-time answers over authenticated Django Channels WebSockets.</p>
+        <ul class="lp-benefit-list">
+          <li>Zero-setup default campus group chat connecting all students</li>
+          <li>Instant WebSocket message delivery with automatic notification alerts</li>
+          <li>Earn +10 contribution points every time you help a classmate clear a doubt</li>
+        </ul>
+        <a href="{% url 'global_chat' %}" class="lp-btn-primary">Open Global Doubt Chat →</a>
+      </div>
+      <div class="lp-spotlight-mockup">
+        <div class="lp-ui-window">
+          <div class="lp-ui-bar">
+            <span class="lp-dot red"></span><span class="lp-dot yellow"></span><span class="lp-dot green"></span>
+            <span class="lp-ui-title"><i class="saas-live-dot"></i> Global Doubt &amp; Study Lounge · Live</span>
+          </div>
+          <div class="lp-ui-body">
+            <div class="lp-mock-chat">
+              <div class="lp-mock-msg">
+                <div class="lp-mock-msg-head"><b>Student Question</b><span>Study Lounge · Live</span></div>
+                <p>When should we use Bellman-Ford instead of Dijkstra for shortest paths?</p>
+              </div>
+              <div class="lp-mock-msg own">
+                <div class="lp-mock-msg-head"><b>Peer Mentor Reply</b><span>Verified Answer · +10 pts earned</span></div>
+                <p>Use Bellman-Ford whenever the graph has negative weight edges! Dijkstra assumes non-negative weights.</p>
+              </div>
+              <div class="lp-mock-input-bar">
+                <span>Ask a doubt or reply to help a peer…</span>
+                <span class="lp-mock-send">Send →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spotlight C: Smart Notes & Resources (Text Left, Visual Right) -->
+    <div class="lp-spotlight-row lp-reveal">
+      <div class="lp-spotlight-copy">
+        <div class="lp-spotlight-icon hcard-blue">📚</div>
+        <span class="lp-section-tag">SMART NOTES &amp; RESOURCES</span>
+        <h3>A Peer-Verified Academic Library Filtered by Subject</h3>
+        <p>Browse lecture notes, assignments, and past question papers shared by top students. Rate resources 1–5 stars, save items into custom course collections, and schedule spaced-repetition reviews.</p>
+        <ul class="lp-benefit-list">
+          <li>Search by keyword, topic, or subject with community star ratings</li>
+          <li>Organize saved materials into custom course &amp; exam collections</li>
+          <li>Built-in spaced repetition (1 → 2 → 4 → 60 days) to lock in long-term memory</li>
+        </ul>
+        <a href="{% url 'material_list' %}" class="lp-btn-primary">Browse Notes &amp; Resources →</a>
+      </div>
+      <div class="lp-spotlight-mockup">
+        <div class="lp-ui-window">
+          <div class="lp-ui-bar">
+            <span class="lp-dot red"></span><span class="lp-dot yellow"></span><span class="lp-dot green"></span>
+            <span class="lp-ui-title">Community Notes Library</span>
+          </div>
+          <div class="lp-ui-body">
+            {% for item in materials|slice:":3" %}
+            <a href="{{ item.get_absolute_url }}" class="lp-mock-note-row">
+              <div>
+                <span class="lp-mock-tag">{{ item.get_material_type_display }}</span>
+                <strong>{{ item.title }}</strong>
+                <small>{{ item.subject }} · shared by @{{ item.owner.username }}</small>
+              </div>
+              <span class="lp-mock-star">★ {{ item.average_rating|floatformat:1 }}</span>
+            </a>
+            {% empty %}
+            <div class="lp-mock-note-row">
+              <div>
+                <span class="lp-mock-tag">Ready for Uploads</span>
+                <strong>No study notes shared yet — publish the first note!</strong>
+                <small>Upload PDF, DOCX, PPTX, or Markdown to earn +25 pts</small>
+              </div>
+              <span class="lp-mock-pill">+25 pts</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spotlight D: Study Lounge & Subject Groups (Visual Left, Text Right) -->
+    <div class="lp-spotlight-row lp-reverse lp-reveal">
+      <div class="lp-spotlight-copy">
+        <div class="lp-spotlight-icon hcard-indigo">👥</div>
+        <span class="lp-section-tag">STUDY LOUNGE &amp; GROUPS</span>
+        <h3>Dedicated Study Circles for Every Course and Exam</h3>
+        <p>Create or join subject-specific study groups to prepare for midterms, share reading lists, and hold focused discussions with students taking the same classes.</p>
+        <ul class="lp-benefit-list">
+          <li>One-click group creation and instant member enrollment</li>
+          <li>Member-gated real-time WebSocket group chat rooms</li>
+          <li>Automatic in-app and email notifications when classmates post updates</li>
+        </ul>
+        <a href="{% url 'group_list' %}" class="lp-btn-primary">Explore Study Groups →</a>
+      </div>
+      <div class="lp-spotlight-mockup">
+        <div class="lp-ui-window">
+          <div class="lp-ui-bar">
+            <span class="lp-dot red"></span><span class="lp-dot yellow"></span><span class="lp-dot green"></span>
+            <span class="lp-ui-title">Active Study Circles</span>
+          </div>
+          <div class="lp-ui-body">
+            {% for grp in groups|slice:":3" %}
+            <a href="{% url 'group_detail' grp.pk %}" class="lp-mock-note-row">
+              <div>
+                <span class="lp-mock-tag">{{ grp.subject }}</span>
+                <strong>{{ grp.name }}</strong>
+                <small>{{ grp.description|truncatechars:70 }}</small>
+              </div>
+              <span class="lp-mock-pill">{{ grp.member_count }} member{{ grp.member_count|pluralize }}</span>
+            </a>
+            {% empty %}
+            <div class="lp-mock-note-row">
+              <div>
+                <span class="lp-mock-tag">All Subjects</span>
+                <strong>Global Doubt &amp; Study Lounge</strong>
+                <small>Default campus-wide real-time study room — start a new subject group anytime.</small>
+              </div>
+              <span class="lp-mock-pill">Live</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spotlight E: Campus Leaderboard (Text Left, Visual Right) -->
+    <div class="lp-spotlight-row lp-reveal">
+      <div class="lp-spotlight-copy">
+        <div class="lp-spotlight-icon hcard-amber">🏆</div>
+        <span class="lp-section-tag">CAMPUS LEADERBOARD</span>
+        <h3>Recognition for Every Note Shared and Doubt Solved</h3>
+        <p>StudySphere rewards genuine academic generosity. Every note you publish, doubt you answer, review you write, and quiz you complete adds to your Campus Rank.</p>
+        <ul class="lp-benefit-list">
+          <li>+25 pts per Shared Note · +10 pts per Doubt Cleared · +15 pts per Helpful Review</li>
+          <li>Unlock contributor tiers from Active Scholar to 👑 Grandmaster Mentor</li>
+          <li>Live Top-3 Podium and personal rank spotlight on your Dashboard</li>
+        </ul>
+        <a href="{% url 'leaderboard' %}" class="lp-btn-primary">View Campus Leaderboard →</a>
+      </div>
+      <div class="lp-spotlight-mockup">
+        <div class="lp-ui-window">
+          <div class="lp-ui-bar">
+            <span class="lp-dot red"></span><span class="lp-dot yellow"></span><span class="lp-dot green"></span>
+            <span class="lp-ui-title">🏆 Live Campus Standings</span>
+          </div>
+          <div class="lp-ui-body">
+            {% for leader in top_contributors %}
+            <div class="lp-mock-note-row">
+              <div style="display:flex;align-items:center;gap:12px">
+                <span class="rank-badge r-{{ leader.rank }}">#{{ leader.rank }}</span>
+                <div>
+                  <strong>@{{ leader.username }}</strong>
+                  <small>{{ leader.badge }} · 📚 {{ leader.notes_count }} notes · 💬 {{ leader.doubts_helped }} replies</small>
+                </div>
+              </div>
+              <span class="points-total">{{ leader.total_points }} pts</span>
+            </div>
+            {% empty %}
+            <div class="lp-mock-note-row">
+              <strong>Share a note to claim the #1 rank!</strong>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     7. COMMUNITY STATISTICS (ANIMATED COUNTERS BOUND TO REAL DB VALUES)
+     ===================================================================== -->
+<section class="lp-stats-section" id="community-stats">
+  <div class="lp-container">
+    <div class="lp-center-header lp-reveal">
+      <span class="lp-section-tag">LIVE CAMPUS IMPACT</span>
+      <h2 class="lp-section-heading">Growing Together, Learning Together.</h2>
+      <p class="lp-section-subtitle">Real-time activity metrics powered directly by the StudySphere community database.</p>
+    </div>
+
+    <div class="lp-stats-grid lp-reveal">
+      <div class="lp-stat-box">
+        <div class="lp-stat-icon hcard-violet">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <strong class="lp-stat-counter" data-target="{{ total_users }}">0</strong>
+        <span class="lp-stat-caption">Active Students</span>
+      </div>
+
+      <div class="lp-stat-box">
+        <div class="lp-stat-icon hcard-blue">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <strong class="lp-stat-counter" data-target="{{ total_materials }}">0</strong>
+        <span class="lp-stat-caption">Notes Shared</span>
+      </div>
+
+      <div class="lp-stat-box">
+        <div class="lp-stat-icon hcard-emerald">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg>
+        </div>
+        <strong class="lp-stat-counter" data-target="{{ total_messages }}">0</strong>
+        <span class="lp-stat-caption">Doubts Solved</span>
+      </div>
+
+      <div class="lp-stat-box">
+        <div class="lp-stat-icon hcard-amber">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        </div>
+        <strong class="lp-stat-counter" data-target="{{ total_groups }}">0</strong>
+        <span class="lp-stat-caption">Active Study Groups</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     8. STUDENT COMMUNITY REVIEWS & BENEFITS (GENUINE DATA ONLY)
+     ===================================================================== -->
+<section class="lp-community-section" id="community-voices">
+  <div class="lp-container">
+    <div class="lp-center-header lp-reveal">
+      <span class="lp-section-tag">PEER-DRIVEN QUALITY</span>
+      <h2 class="lp-section-heading">Why Students Learn Better on StudySphere</h2>
+      <p class="lp-section-subtitle">Authentic peer reviews from our library and core benefits built for campus collaboration.</p>
+    </div>
+
+    <div class="lp-community-grid lp-reveal">
+      {% for material in materials %}
+        {% for rev in material.reviews.all|slice:":2" %}
+        <article class="lp-testimonial-card">
+          <div class="lp-stars">★★★★★ <span>{{ rev.rating }}/5 on “{{ material.title }}”</span></div>
+          <p class="lp-quote">“{{ rev.comment }}”</p>
+          <div class="lp-author">
+            <div class="lp-author-avatar">{{ rev.author.username|slice:":1"|upper }}</div>
+            <div>
+              <strong>@{{ rev.author.username }}</strong>
+              <span>Verified Peer Review · {{ material.subject }}</span>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      {% endfor %}
+
+      <article class="lp-testimonial-card">
+        <div class="lp-benefit-pill">🔒 Privacy-First AI Architecture</div>
+        <h3 style="margin:10px 0 8px;font-size:18px;color:#17213D">Local Fallback + OpenAI Integration</h3>
+        <p class="lp-quote">StudySphere works out of the box with a deterministic local study processor and seamlessly upgrades to OpenAI when configured—keeping student notes accessible 24/7.</p>
+        <div class="lp-author">
+          <div class="lp-author-avatar">✦</div>
+          <div>
+            <strong>AI Study Studio</strong>
+            <span>Daily Responsible-Use Limits Built In</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="lp-testimonial-card">
+        <div class="lp-benefit-pill">🧠 Cognitive Retention</div>
+        <h3 style="margin:10px 0 8px;font-size:18px;color:#17213D">Automated Spaced-Repetition Intervals</h3>
+        <p class="lp-quote">Marking any study resource complete automatically schedules expanding review reminders (1 → 2 → 4 → 8 → 60 days) so you never forget exam concepts.</p>
+        <div class="lp-author">
+          <div class="lp-author-avatar">🔥</div>
+          <div>
+            <strong>Spaced Review Engine</strong>
+            <span>Integrated with Daily Study Streaks</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     9. FINAL CALL-TO-ACTION
+     ===================================================================== -->
+<section class="lp-final-cta-section" id="final-cta">
+  <div class="lp-container">
+    <div class="lp-final-cta-box lp-reveal">
+      <div class="lp-cta-shape lp-cta-shape-1" aria-hidden="true"></div>
+      <div class="lp-cta-shape lp-cta-shape-2" aria-hidden="true"></div>
+
+      <div class="lp-final-cta-content">
+        <span class="lp-cta-badge">START FOR FREE TODAY</span>
+        <h2>Your Next Learning Breakthrough Starts Here.</h2>
+        <p>Join StudySphere and make your learning journey more collaborative, intelligent, and productive.</p>
+        <div class="lp-final-cta-buttons">
+          <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'signup' %}{% endif %}" class="lp-btn-white lp-btn-lg">
+            <span>Get Started</span>
+            <span aria-hidden="true">→</span>
+          </a>
+          {% if not user.is_authenticated %}
+          <a href="{% url 'login' %}" class="lp-btn-outline-white lp-btn-lg">
+            <span>Sign In to Workspace</span>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     11. ANIMATION & INTERACTION ENGINE (GSAP + SCROLLTRIGGER + TYPED.JS)
+     ===================================================================== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.1.0/typed.umd.js" defer></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* 1. Sticky Navbar Scroll Effect & Mobile Menu Toggle */
+    const navbar = document.getElementById('lp-navbar');
+    const mobileToggle = document.getElementById('lp-mobile-toggle');
+    const navLinks = document.getElementById('lp-nav-links');
+
+    if (navbar) {
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 18) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+      }, { passive: true });
+    }
+
+    if (mobileToggle && navLinks) {
+      mobileToggle.addEventListener('click', function() {
+        const expanded = mobileToggle.getAttribute('aria-expanded') === 'true';
+        mobileToggle.setAttribute('aria-expanded', String(!expanded));
+        navLinks.classList.toggle('open');
+      });
+      navLinks.querySelectorAll('a').forEach(function(link) {
+        link.addEventListener('click', function() {
+          navLinks.classList.remove('open');
+          mobileToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+
+    /* Active section spy for navbar links */
+    const sections = ['hero', 'facilities', 'how-it-works'];
+    window.addEventListener('scroll', function() {
+      const scrollPos = window.scrollY + 180;
+      sections.forEach(function(id) {
+        const el = document.getElementById(id);
+        const navItem = document.querySelector('.lp-nav-link[data-nav-section="' + id + '"]');
+        if (el && navItem) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPos >= top && scrollPos < top + height) {
+            document.querySelectorAll('.lp-nav-link[data-nav-section]').forEach(function(n) {
+              n.classList.remove('active');
+            });
+            navItem.classList.add('active');
+          }
+        }
+      });
+    }, { passive: true });
+
+    /* 2. Typewriter Text Effect (Typed.js with built-in zero-dependency fallback) */
+    const phrases = [
+      'Learn Smarter with AI',
+      'Collaborate with Your Campus',
+      'Share Knowledge Together',
+      'Solve Doubts in Real Time',
+      'Grow Faster with StudySphere'
+    ];
+    const typedTarget = document.getElementById('lp-typed-target');
+
+    if (typedTarget && !prefersReducedMotion) {
+      if (window.Typed) {
+        const nativeCursor = document.querySelector('.lp-typed-cursor');
+        if (nativeCursor) nativeCursor.style.display = 'none';
+        new window.Typed('#lp-typed-target', {
+          strings: phrases,
+          typeSpeed: 46,
+          backSpeed: 28,
+          backDelay: 1700,
+          startDelay: 250,
+          loop: true,
+          smartBackspace: true
+        });
+      } else {
+        /* Fallback character-by-character typewriter if CDN is offline */
+        let phraseIdx = 0;
+        let charIdx = phrases[0].length;
+        let isDeleting = true;
+
+        function tickTypewriter() {
+          const currentPhrase = phrases[phraseIdx];
+          if (isDeleting) {
+            charIdx--;
+            typedTarget.textContent = currentPhrase.substring(0, charIdx);
+            if (charIdx === 0) {
+              isDeleting = false;
+              phraseIdx = (phraseIdx + 1) % phrases.length;
+              setTimeout(tickTypewriter, 260);
+            } else {
+              setTimeout(tickTypewriter, 26);
+            }
+          } else {
+            charIdx++;
+            typedTarget.textContent = currentPhrase.substring(0, charIdx);
+            if (charIdx === currentPhrase.length) {
+              isDeleting = true;
+              setTimeout(tickTypewriter, 1750);
+            } else {
+              setTimeout(tickTypewriter, 48);
+            }
+          }
+        }
+        setTimeout(tickTypewriter, 1600);
+      }
+    }
+
+    /* 3. Gentle Hero Mouse Parallax */
+    const heroSection = document.getElementById('hero');
+    if (heroSection && !prefersReducedMotion) {
+      heroSection.addEventListener('mousemove', function(e) {
+        const rect = heroSection.getBoundingClientRect();
+        const relX = (e.clientX - rect.left - rect.width / 2);
+        const relY = (e.clientY - rect.top - rect.height / 2);
+        document.querySelectorAll('[data-parallax]').forEach(function(layer) {
+          const speed = parseFloat(layer.getAttribute('data-parallax')) || 0.03;
+          layer.style.transform = 'translate3d(' + (relX * speed).toFixed(1) + 'px, ' + (relY * speed).toFixed(1) + 'px, 0)';
+        });
+      });
+    }
+
+    /* 4. GSAP ScrollTrigger Horizontal Feature Scrolling + Native Fallback */
+    const hSection = document.getElementById('facilities');
+    const hPin = document.getElementById('lp-hscroll-pin');
+    const hTrack = document.getElementById('lp-hscroll-track');
+    const hViewport = document.getElementById('lp-hscroll-viewport');
+    const hBarFill = document.getElementById('lp-hscroll-bar-fill');
+
+    function initHorizontalShowcase() {
+      if (!hSection || !hTrack || !hViewport || prefersReducedMotion) return;
+
+      if (window.gsap && window.ScrollTrigger) {
+        window.gsap.registerPlugin(window.ScrollTrigger);
+        const mm = window.gsap.matchMedia();
+
+        mm.add('(min-width: 901px)', function() {
+          const getMaxScroll = function() {
+            return Math.max(0, hTrack.scrollWidth - hViewport.clientWidth + 48);
+          };
+
+          window.gsap.to(hTrack, {
+            x: function() { return -getMaxScroll(); },
+            ease: 'none',
+            scrollTrigger: {
+              trigger: hSection,
+              pin: hPin,
+              start: 'top top+=76',
+              end: function() { return '+=' + (getMaxScroll() + 220); },
+              scrub: 0.6,
+              invalidateOnRefresh: true,
+              onUpdate: function(self) {
+                if (hBarFill) {
+                  hBarFill.style.width = Math.round(self.progress * 100) + '%';
+                }
+              }
+            }
+          });
+        });
+      } else {
+        /* Fallback CSS sticky horizontal scroll driven by vertical scroll */
+        function updateStickyHorizontal() {
+          if (window.innerWidth <= 900) {
+            hSection.style.height = 'auto';
+            hTrack.style.transform = 'none';
+            return;
+          }
+          const maxScroll = Math.max(0, hTrack.scrollWidth - hViewport.clientWidth + 48);
+          hSection.style.height = (window.innerHeight + maxScroll) + 'px';
+          hPin.style.position = 'sticky';
+          hPin.style.top = '76px';
+
+          const rect = hSection.getBoundingClientRect();
+          const totalTravel = hSection.offsetHeight - window.innerHeight;
+          if (totalTravel <= 0) return;
+          const rawProgress = (-rect.top) / totalTravel;
+          const clamped = Math.max(0, Math.min(1, rawProgress));
+          hTrack.style.transform = 'translate3d(' + (-clamped * maxScroll).toFixed(1) + 'px, 0, 0)';
+          if (hBarFill) {
+            hBarFill.style.width = Math.round(clamped * 100) + '%';
+          }
+        }
+        window.addEventListener('scroll', updateStickyHorizontal, { passive: true });
+        window.addEventListener('resize', updateStickyHorizontal);
+        updateStickyHorizontal();
+      }
+    }
+    initHorizontalShowcase();
+
+    /* 5. Scroll-Triggered Reveal & Timeline Line Progress */
+    const revealEls = document.querySelectorAll('.lp-reveal');
+    if ('IntersectionObserver' in window && !prefersReducedMotion) {
+      const revealObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.14 });
+      revealEls.forEach(function(el) { revealObserver.observe(el); });
+    } else {
+      revealEls.forEach(function(el) { el.classList.add('is-visible'); });
+    }
+
+    const timelineEl = document.getElementById('lp-timeline');
+    const timelineFill = document.getElementById('lp-timeline-line-fill');
+    if (timelineEl && timelineFill && !prefersReducedMotion) {
+      window.addEventListener('scroll', function() {
+        const rect = timelineEl.getBoundingClientRect();
+        const winH = window.innerHeight;
+        const progress = Math.max(0, Math.min(1, (winH * 0.72 - rect.top) / rect.height));
+        timelineFill.style.height = Math.round(progress * 100) + '%';
+      }, { passive: true });
+    }
+
+    /* 6. Animated Statistics Counters */
+    const counters = document.querySelectorAll('.lp-stat-counter');
+    function animateCounter(el) {
+      const target = parseInt(el.getAttribute('data-target') || '0', 10);
+      if (prefersReducedMotion || target === 0) {
+        el.textContent = String(target);
+        return;
+      }
+      const duration = 1100;
+      const startTime = performance.now();
+      function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = String(Math.round(eased * target));
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          el.textContent = String(target);
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    if ('IntersectionObserver' in window) {
+      const counterObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            animateCounter(entry.target);
+            counterObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.35 });
+      counters.forEach(function(c) { counterObserver.observe(c); });
+    } else {
+      counters.forEach(animateCounter);
+    }
+  });
+</script>
+
+{% endblock %}

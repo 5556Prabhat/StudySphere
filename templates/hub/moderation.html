@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block title %}Moderation queue | StudySphere{% endblock %}{% block content %}
+<div class="subpage-backbar">
+  <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Default Dashboard</a>
+</div>
+<div class="page-heading" style="margin-top:18px"><div><p class="eyebrow">STAFF AREA</p><h1>Moderation queue</h1></div></div><section class="panel">{% for report in reports %}<article class="review"><b>{{ report.material.title }}</b><p><strong>Reason:</strong> {{ report.reason }}<br>{{ report.details }}<br><small>Reported by {{ report.reporter.username }} · {{ report.created_at|date:"M j, Y" }}</small></p><form method="post" action="{% url 'resolve_report' report.pk %}">{% csrf_token %}<label><input type="checkbox" name="hide" value="1"> Hide this resource</label><button class="button">Resolve</button></form></article>{% empty %}<p class="empty">No unresolved reports.</p>{% endfor %}</section>{% endblock %}

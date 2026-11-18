@@ -1,0 +1,38 @@
+from django.contrib import admin
+from .models import (
+    AIUsage,
+    AcademicDoubt,
+    ContentReport,
+    DiscussionMessage,
+    DoubtReply,
+    GroupMembership,
+    LearningProgress,
+    MaterialReview,
+    Notification,
+    PointsTransaction,
+    Profile,
+    QuizAttempt,
+    SavedMaterial,
+    StudyCollection,
+    StudyGroup,
+    StudyMaterial,
+)
+
+admin.site.register([
+    Profile,
+    StudyMaterial,
+    MaterialReview,
+    StudyGroup,
+    GroupMembership,
+    DiscussionMessage,
+    AcademicDoubt,
+    DoubtReply,
+    LearningProgress,
+    ContentReport,
+    Notification,
+    StudyCollection,
+    SavedMaterial,
+    AIUsage,
+    QuizAttempt,
+    PointsTransaction,
+])

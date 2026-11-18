@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% block title %}{{ group.name }} | StudySphere{% endblock %}
+{% block content %}
+<div class="subpage-backbar">
+  <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Dashboard</a>
+  <a class="text-action" href="{% url 'group_list' %}">All Study Groups →</a>
+</div>
+
+<div class="page-heading" style="margin-top:16px">
+  <div>
+    {% if is_global_gc %}
+      <span class="tag indigo"><span class="live-dot"></span>DEFAULT CAMPUS GROUP CHAT · ALL STUDENTS CONNECTED</span>
+    {% else %}
+      <span class="tag warm">{{ group.subject }}</span>
+    {% endif %}
+    <h1>{{ group.name }}</h1>
+    <p class="lead">{{ group.description }}</p>
+  </div>
+  {% if user.is_authenticated and not is_member %}
+  <form method="post" action="{% url 'join_group' group.pk %}">
+    {% csrf_token %}
+    <button class="button">Join group</button>
+  </form>
+  {% endif %}
+</div>
+
+<!-- TWO SEPARATE GROUP CHAT TABS: TAB A (GENERAL TALK) & TAB B (ACADEMIC DOUBTS) -->
+<div class="gc-tabs-bar" role="tablist" aria-label="Group Chat Categories">
+  <button
+    type="button"
+    class="gc-tab-btn {% if active_tab != 'doubts' %}active{% endif %}"
+    data-gc-tab="general"
+    role="tab"
+    aria-selected="{% if active_tab != 'doubts' %}true{% else %}false{% endif %}"
+  >
+    <span class="gc-tab-icon">💬</span>
+    <span>General Talk</span>
+    <span class="gc-tab-pill neutral">0 pts</span>
+  </button>
+
+  <button
+    type="button"
+    class="gc-tab-btn {% if active_tab == 'doubts' %}active{% endif %}"
+    data-gc-tab="doubts"
+    role="tab"
+    aria-selected="{% if active_tab == 'doubts' %}true{% else %}false{% endif %}"
+  >
+    <span class="gc-tab-icon">🎓</span>
+    <span>Academic Doubts</span>
+    <span class="gc-tab-pill reward">+20 pts / Accepted Solution</span>
+    {% if unresolved_doubt_count %}
+      <span class="gc-tab-count">{{ unresolved_doubt_count }} open</span>
+    {% endif %}
+  </button>
+</div>
+
+<!-- =====================================================================
+     TAB A — GENERAL TALK (0 POINTS PER MESSAGE)
+     ===================================================================== -->
+<section
+  id="gc-panel-general"
+  class="discussion panel"
+  style="{% if active_tab == 'doubts' %}display:none{% endif %}"
+>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div>
+      <h2><span class="live-dot"></span>General Talk</h2>
+      <p class="subtle" style="margin:2px 0 0;font-size:13.5px">
+        Casual student conversations, campus discussions, and general interactions.
+      </p>
+    </div>
+    <span class="tag">Casual Chat · 0 Points</span>
+  </div>
+
+  <div id="messages" class="chat-window" style="max-height:460px">
+    {% for message in general_messages %}
+      <article class="message {% if message.author == user %}own-message{% endif %}" id="msg-{{ message.pk }}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="gc-msg-avatar">{{ message.author.username|slice:":1"|upper }}</span>
+            <b>@{{ message.author.username }}</b>
+            {% if message.is_system %}<span class="tag" style="font-size:10px;padding:2px 7px">System</span>{% endif %}
+            <small>{{ message.created_at|date:"M j, g:i A" }}</small>
+          </div>
+          {% if is_member %}
+          <button
+            type="button"
+            class="text-button"
+            style="font-size:12px"
+            onclick="setGeneralReply('{{ message.pk }}', '{{ message.author.username|escapejs }}')"
+          >
+            Reply
+          </button>
+          {% endif %}
+        </div>
+        {% if message.reply_to %}
+          <div class="gc-reply-quote">
+            Replying to <b>@{{ message.reply_to.author.username }}</b>: “{{ message.reply_to.body|truncatechars:80 }}”
+          </div>
+        {% endif %}
+        <p>{{ message.body|linebreaksbr }}</p>
+      </article>
+    {% empty %}
+      <p class="empty">The conversation will start here.</p>
+    {% endfor %}
+  </div>
+
+  {% if is_member %}
+    <form id="chat-form" method="post" action="{% url 'post_message' group.pk %}">
+      {% csrf_token %}
+      <input type="hidden" name="reply_to" id="general-reply-to" value="">
+      <div id="general-reply-banner" class="gc-reply-banner" style="display:none">
+        <span id="general-reply-label">Replying to @user</span>
+        <button type="button" class="text-button" onclick="clearGeneralReply()">✕ Cancel</button>
+      </div>
+      {{ message_form.as_p }}
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <small class="subtle">General Talk messages earn 0 points. Have an academic question? Switch to the <b>Academic Doubts</b> tab!</small>
+        <button class="button" type="submit">Send Message</button>
+      </div>
+    </form>
+    <script>
+      function setGeneralReply(msgId, authorName) {
+        const input = document.getElementById('general-reply-to');
+        const banner = document.getElementById('general-reply-banner');
+        const label = document.getElementById('general-reply-label');
+        if (input && banner && label) {
+          input.value = msgId;
+          label.textContent = 'Replying to @' + authorName;
+          banner.style.display = 'flex';
+          const textarea = document.querySelector('#chat-form textarea');
+          if (textarea) textarea.focus();
+        }
+      }
+      function clearGeneralReply() {
+        const input = document.getElementById('general-reply-to');
+        const banner = document.getElementById('general-reply-banner');
+        if (input && banner) {
+          input.value = '';
+          banner.style.display = 'none';
+        }
+      }
+      (function() {
+        const form = document.querySelector('#chat-form'),
+              body = form.querySelector('textarea'),
+              replyInput = document.getElementById('general-reply-to'),
+              list = document.querySelector('#messages');
+        list.scrollTop = list.scrollHeight;
+        const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+        const socket = new WebSocket(`${protocol}://${location.host}/ws/groups/{{ group.pk }}/`);
+        form.addEventListener('submit', e => {
+          if (socket.readyState === WebSocket.OPEN && body.value.trim() && (!replyInput || !replyInput.value)) {
+            e.preventDefault();
+            socket.send(JSON.stringify({ body: body.value }));
+            body.value = '';
+          }
+        });
+        socket.onmessage = e => {
+          const m = JSON.parse(e.data),
+                article = document.createElement('article'),
+                name = document.createElement('b'),
+                time = document.createElement('small'),
+                text = document.createElement('p');
+          article.className = 'message' + (m.author === '{{ user.username|escapejs }}' ? ' own-message' : '');
+          name.textContent = '@' + m.author;
+          time.textContent = ' ' + m.created_at;
+          text.textContent = m.body;
+          article.append(name, time, text);
+          list.append(article);
+          list.scrollTop = list.scrollHeight;
+        };
+      })();
+    </script>
+  {% elif user.is_authenticated %}
+    <p class="subtle">Join the group to add to the discussion.</p>
+  {% else %}
+    <a href="{% url 'login' %}">Sign in to join the discussion</a>
+  {% endif %}
+</section>
+
+<!-- =====================================================================
+     TAB B — ACADEMIC DOUBTS (+20 POINTS FOR ACCEPTED SOLUTION)
+     ===================================================================== -->
+<section
+  id="gc-panel-doubts"
+  class="discussion"
+  style="{% if active_tab != 'doubts' %}display:none{% endif %}"
+>
+  <!-- Ask a New Academic Doubt Card -->
+  <div class="panel" style="margin-bottom:24px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+      <div>
+        <span class="eyebrow">ACADEMIC Q&amp;A FORUM</span>
+        <h2>Ask an Academic Doubt</h2>
+        <p class="subtle" style="margin:4px 0 0;font-size:13.5px">
+          Post a clear question with subject details. When a classmate provides a helpful explanation and you accept it as the solution, they earn <b>+20 Leaderboard points</b>!
+        </p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="tag">{{ unresolved_doubt_count }} Unresolved</span>
+        <span class="tag indigo">{{ resolved_doubt_count }} Resolved</span>
+      </div>
+    </div>
+
+    {% if is_member %}
+    <form method="post" action="{% url 'create_doubt' group.pk %}" class="doubt-create-form">
+      {% csrf_token %}
+      <div class="doubt-form-grid">
+        <p style="margin:0">
+          <label for="{{ doubt_form.title.id_for_label }}">{{ doubt_form.title.label }}</label>
+          {{ doubt_form.title }}
+        </p>
+        <p style="margin:0">
+          <label for="{{ doubt_form.subject.id_for_label }}">{{ doubt_form.subject.label }}</label>
+          {{ doubt_form.subject }}
+        </p>
+        <p style="margin:0">
+          <label for="{{ doubt_form.tagged_username.id_for_label }}">{{ doubt_form.tagged_username.label }}</label>
+          {{ doubt_form.tagged_username }}
+        </p>
+      </div>
+      <p style="margin:12px 0">
+        <label for="{{ doubt_form.body.id_for_label }}">{{ doubt_form.body.label }}</label>
+        {{ doubt_form.body }}
+      </p>
+      <button type="submit" class="button">Post Academic Doubt</button>
+    </form>
+    {% elif user.is_authenticated %}
+      <p class="subtle">Join this study group to ask or answer academic doubts.</p>
+    {% else %}
+      <a class="button small" href="{% url 'login' %}">Sign in to ask a doubt</a>
+    {% endif %}
+  </div>
+
+  <!-- Existing Academic Doubts Feed -->
+  <div class="doubts-feed">
+    {% for doubt in doubts %}
+      <article class="panel doubt-card {% if doubt.is_resolved %}doubt-resolved{% endif %}" id="doubt-{{ doubt.pk }}">
+        <div class="doubt-card-header">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            {% if doubt.reward_revoked %}
+              <span class="doubt-status-badge status-revoked">⚠ Reward Revoked by Moderator</span>
+            {% elif doubt.is_resolved %}
+              <span class="doubt-status-badge status-resolved">✓ Resolved · Solution Accepted (+20 pts)</span>
+            {% else %}
+              <span class="doubt-status-badge status-open">● Unresolved Doubt</span>
+            {% endif %}
+            <span class="tag">{{ doubt.subject }}</span>
+            {% if doubt.tagged_username %}
+              <span class="tag indigo">Tagged: @{{ doubt.tagged_username }}</span>
+            {% endif %}
+          </div>
+          <span class="subtle" style="font-size:12.5px">
+            {{ doubt.replies.count }} repl{{ doubt.replies.count|pluralize:"y,ies" }} · Asked {{ doubt.created_at|date:"M j, g:i A" }}
+          </span>
+        </div>
+
+        <h3 class="doubt-title">{{ doubt.title }}</h3>
+        <p class="doubt-body">{{ doubt.body|linebreaksbr }}</p>
+
+        <div class="doubt-meta-bar">
+          <span>Asked by <b>@{{ doubt.author.username }}</b></span>
+          {% if doubt.is_resolved and doubt.solved_by %}
+            <span class="solved-by-pill">
+              🏆 Solved by <b>@{{ doubt.solved_by.username }}</b>
+              {% if not doubt.reward_revoked %}(+20 pts awarded){% endif %}
+            </span>
+          {% endif %}
+          {% if user.is_staff and doubt.is_resolved and not doubt.reward_revoked %}
+            <form method="post" action="{% url 'revoke_doubt_reward' doubt.pk %}" class="inline" style="margin-left:auto">
+              {% csrf_token %}
+              <input type="hidden" name="reason" value="Flagged or low-quality solution revoked by moderator">
+              <button type="submit" class="button small secondary" style="color:#DC2626;border-color:#FECACA">
+                🛡️ Revoke +20 pts Reward
+              </button>
+            </form>
+          {% endif %}
+        </div>
+
+        <!-- Replies List under Parent Doubt -->
+        <div class="doubt-replies-list">
+          {% for reply in doubt.replies.all %}
+            <div class="doubt-reply-item {% if reply.is_accepted %}accepted-solution{% endif %}" id="reply-{{ reply.pk }}">
+              <div class="doubt-reply-header">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span class="gc-msg-avatar">{{ reply.author.username|slice:":1"|upper }}</span>
+                  <b>@{{ reply.author.username }}</b>
+                  <small>{{ reply.created_at|date:"M j, g:i A" }}</small>
+                  {% if reply.is_accepted %}
+                    <span class="accepted-solution-pill">✓ Accepted Solution · +20 pts</span>
+                  {% endif %}
+                </div>
+
+                {% if not doubt.is_resolved and user.is_authenticated %}
+                  {% if user == doubt.author or user.is_staff %}
+                    {% if reply.author != doubt.author %}
+                      <form method="post" action="{% url 'accept_doubt_reply' doubt.pk reply.pk %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="button small" style="padding:6px 12px;font-size:12px">
+                          ✓ Accept as Solution (+20 pts)
+                        </button>
+                      </form>
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
+              </div>
+              <p class="doubt-reply-body">{{ reply.body|linebreaksbr }}</p>
+            </div>
+          {% empty %}
+            <p class="empty" style="margin:8px 0">No explanations posted yet. Be the first to help @{{ doubt.author.username }} and earn +20 points!</p>
+          {% endfor %}
+        </div>
+
+        <!-- Reply Form under Doubt -->
+        {% if is_member %}
+          <form method="post" action="{% url 'reply_doubt' doubt.pk %}" class="doubt-reply-form">
+            {% csrf_token %}
+            <textarea
+              name="body"
+              rows="2"
+              placeholder="Write a clear explanation for @{{ doubt.author.username }} (at least 15 chars &amp; 3 words to qualify for +20 pts)…"
+              required
+            ></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px">
+              <small class="subtle">
+                {% if doubt.is_resolved %}
+                  This doubt is resolved, but you can still add follow-up notes.
+                {% elif user == doubt.author %}
+                  Add clarifying details to your doubt (self-replies do not earn points).
+                {% else %}
+                  Earn <b>+20 pts</b> if @{{ doubt.author.username }} accepts your explanation!
+                {% endif %}
+              </small>
+              <button type="submit" class="button small">Post Explanation</button>
+            </div>
+          </form>
+        {% endif %}
+      </article>
+    {% empty %}
+      <section class="panel" style="text-align:center;padding:40px 24px">
+        <h3>No academic doubts posted yet.</h3>
+        <p class="subtle">Have a question about an algorithm, theorem, or lecture topic? Post the first academic doubt above!</p>
+      </section>
+    {% endfor %}
+  </div>
+</section>
+
+<script>
+  (function() {
+    const tabButtons = document.querySelectorAll('.gc-tab-btn');
+    const panelGeneral = document.getElementById('gc-panel-general');
+    const panelDoubts = document.getElementById('gc-panel-doubts');
+    tabButtons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const target = btn.getAttribute('data-gc-tab');
+        tabButtons.forEach(function(b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        if (target === 'doubts') {
+          panelGeneral.style.display = 'none';
+          panelDoubts.style.display = 'block';
+        } else {
+          panelGeneral.style.display = 'block';
+          panelDoubts.style.display = 'none';
+        }
+      });
+    });
+  })();
+</script>
+{% endblock %}

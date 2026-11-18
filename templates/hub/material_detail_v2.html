@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}{{ material.title }} | StudySphere{% endblock %}
+{% block content %}
+<div class="subpage-backbar">
+  {% if user.is_authenticated %}
+  <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Default Dashboard</a>
+  {% endif %}
+  <a class="text-action" href="{% url 'material_list' %}">All Shared Notes →</a>
+</div>
+
+<article class="detail" style="margin-top:18px">
+  <span class="tag">{{ material.get_material_type_display }}</span>
+  <h1>{{ material.title }}</h1>
+  <p class="subtle">{{ material.subject }}{% if material.topic %} · {{ material.topic }}{% endif %} · shared by <b>@{{ material.owner.username }}</b> on {{ material.created_at|date:"M j, Y" }}</p>
+  <p class="description">{{ material.description|linebreaksbr }}</p>
+  {% if material.is_image_file %}
+  <div style="margin:18px 0">
+    <a href="{{ material.file.url }}" target="_blank">
+      <img src="{{ material.file.url }}" alt="{{ material.title }}" style="max-width:100%;max-height:520px;border-radius:14px;border:1px solid var(--saas-border);box-shadow:0 6px 20px rgba(23,33,61,0.06)">
+    </a>
+  </div>
+  {% endif %}
+  <div class="actions">
+    {% if material.file %}<a class="button" href="{{ material.file.url }}" target="_blank">Open file</a>{% endif %}
+    {% if material.external_link %}<a class="button secondary" href="{{ material.external_link }}" target="_blank">Visit link</a>{% endif %}
+    {% if user.is_authenticated %}
+    <form class="inline" method="post" action="{% url 'toggle_progress' material.pk %}">{% csrf_token %}<button class="button secondary">Mark complete / undo</button></form>
+    <form class="inline" method="post" action="{% url 'toggle_saved' material.pk %}">{% csrf_token %}<button class="button secondary">{% if is_saved %}Unsave{% else %}Save for later{% endif %}</button></form>
+    {% endif %}
+    {% if user == material.owner %}
+    <a class="text-action" href="{% url 'material_edit' material.pk %}">Edit</a>
+    <form class="inline" method="post" action="{% url 'material_delete' material.pk %}" onsubmit="return confirm('Delete this resource?');">{% csrf_token %}<button class="text-button">Delete</button></form>
+    {% endif %}
+  </div>
+</article>
+
+<div class="two-column">
+  <section class="panel">
+    <h2>Community reviews <span class="rating">★ {{ material.average_rating|floatformat:1 }}</span></h2>
+    {% for review in material.reviews.all %}
+    <div class="review"><b>@{{ review.author.username }} · {{ review.rating }}/5</b><p>{{ review.comment }}</p></div>
+    {% empty %}
+    <p class="empty">No reviews yet.</p>
+    {% endfor %}
+    {% if user.is_authenticated %}
+    <hr>
+    <h3>Rate this resource (+15 Leaderboard pts)</h3>
+    <form method="post" action="{% url 'review_material' material.pk %}">{% csrf_token %}{{ review_form.as_p }}<button class="button">Save review</button></form>
+    {% endif %}
+  </section>
+  <aside class="panel">
+    <h2>Keep the library useful</h2>
+    <p>Found an inaccurate, unsafe, or broken resource?</p>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'report_material' material.pk %}">{% csrf_token %}{{ report_form.as_p }}<button class="text-button">Report material</button></form>
+    {% else %}
+    <a href="{% url 'login' %}">Sign in to report</a>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

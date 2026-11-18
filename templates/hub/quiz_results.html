@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% block title %}Quiz Results | StudySphere{% endblock %}{% block content %}
+<div class="page-heading"><div><p class="eyebrow">AUTO-GRADED RESULTS</p><h1>Quiz Results</h1></div></div>
+<div class="stats"><div><b>{{ score }}%</b><span>score</span></div><div><b>{{ correct }}/{{ total }}</b><span>correct answers</span></div></div>
+<section class="panel" style="margin-top:28px">
+{% for item in results %}
+<div class="review" style="border-left:4px solid {% if item.is_correct %}#265c45{% else %}#d94f4f{% endif %};padding-left:16px;margin-bottom:20px">
+  <p><b>{{ item.question }}</b></p>
+  {% for choice in item.choices %}<p style="margin:4px 0;{% if choice|slice:':1' == item.correct_answer %}font-weight:700;color:#265c45{% endif %}{% if choice|slice:':1' == item.user_answer and not item.is_correct %};color:#d94f4f{% endif %}">{{ choice }}</p>{% endfor %}
+  <p style="margin-top:8px"><small>Your answer: <b>{{ item.user_answer|default:"—" }}</b> · Correct: <b>{{ item.correct_answer }}</b>{% if item.is_correct %} ✓{% else %} ✗{% endif %}</small></p>
+  {% if item.explanation %}<p class="subtle" style="margin-top:4px"><em>{{ item.explanation }}</em></p>{% endif %}
+</div>
+{% endfor %}
+</section>
+<div style="margin-top:24px"><a class="button" href="{% url 'ai_studio' %}">Generate another quiz</a> <a class="text-action" href="{% url 'dashboard' %}">Back to dashboard</a></div>
+{% endblock %}
+

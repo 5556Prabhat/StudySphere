@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% block title %}Campus Leaderboard | StudySphere{% endblock %}
+{% block content %}
+
+<div class="subpage-backbar">
+  {% if user.is_authenticated %}
+  <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Dashboard</a>
+  {% else %}
+  <a class="button small secondary" href="{% url 'home' %}">← Back to Home</a>
+  {% endif %}
+  {% if user.is_authenticated %}
+  <a class="button small" href="{% url 'points_history' %}">📜 View Your Points History →</a>
+  {% endif %}
+</div>
+
+<div class="page-heading" style="margin-top:16px">
+  <div>
+    <p class="eyebrow">ACADEMIC CONTRIBUTION &amp; MERIT SYSTEM</p>
+    <h1>🏆 Campus Leaderboard</h1>
+    <p class="lead">StudySphere rewards meaningful academic contributions rather than message volume. Help your classmates, share knowledge, and grow your campus learning community.</p>
+  </div>
+  {% if user.is_authenticated %}
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <a class="button" href="{% url 'material_create' %}">+ Share Notes (+25 pts)</a>
+    <a class="button secondary" href="{% url 'global_chat' %}?tab=doubts">🎓 Solve Doubts (+20 pts)</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- THREE NAVIGATION TABS: 1) Leaderboard, 2) How to Earn Points, 3) Points History -->
+<div class="gc-tabs-bar" role="tablist" aria-label="Leaderboard Navigation">
+  <button
+    type="button"
+    class="gc-tab-btn {% if active_tab != 'earn' %}active{% endif %}"
+    data-lb-tab="leaderboard"
+    role="tab"
+  >
+    <span class="gc-tab-icon">🏆</span>
+    <span>Leaderboard</span>
+  </button>
+
+  <button
+    type="button"
+    class="gc-tab-btn {% if active_tab == 'earn' %}active{% endif %}"
+    data-lb-tab="earn"
+    role="tab"
+  >
+    <span class="gc-tab-icon">📖</span>
+    <span>How to Earn Points</span>
+  </button>
+
+  {% if user.is_authenticated %}
+  <a href="{% url 'points_history' %}" class="gc-tab-btn" style="text-decoration:none">
+    <span class="gc-tab-icon">📜</span>
+    <span>Points History</span>
+    {% if my_summary %}
+      <span class="gc-tab-pill reward">{{ my_summary.total_points }} pts</span>
+    {% endif %}
+  </a>
+  {% else %}
+  <a href="{% url 'login' %}?next={% url 'points_history' %}" class="gc-tab-btn" style="text-decoration:none">
+    <span class="gc-tab-icon">📜</span>
+    <span>Points History</span>
+  </a>
+  {% endif %}
+</div>
+
+<!-- =====================================================================
+     TAB 1 — LEADERBOARD STANDINGS
+     ===================================================================== -->
+<div id="lb-panel-leaderboard" style="{% if active_tab == 'earn' %}display:none{% endif %}">
+  <!-- Top 3 Podium -->
+  {% if top_three %}
+  <div class="podium-grid">
+    {% for entry in top_three %}
+    <article class="podium-card rank-{{ entry.rank }}">
+      <div class="medal-circle">
+        {% if entry.rank == 1 %}🥇{% elif entry.rank == 2 %}🥈{% else %}🥉{% endif %}
+      </div>
+      {% if entry.avatar_url %}
+        <img src="{{ entry.avatar_url }}" alt="{{ entry.username }}" class="lb-avatar-lg">
+      {% endif %}
+      <span class="tier-pill {{ entry.tier_class }}">{{ entry.badge }}</span>
+      <h3 style="font:700 21px 'Inter',sans-serif;margin:10px 0 4px;color:var(--saas-text)">@{{ entry.username }}</h3>
+      <p class="subtle" style="margin:0 0 10px;font-size:13px">{{ entry.institution }} · {{ entry.course }}</p>
+      <div style="font:800 30px 'Inter',sans-serif;color:var(--saas-purple);margin-bottom:12px">{{ entry.total_points }} PTS</div>
+      <div class="contrib-metrics" style="justify-content:center;flex-wrap:wrap">
+        <span title="Approved Study Notes (+25 pts each)">📚 {{ entry.notes_count }} Notes</span>
+        <span title="Accepted Academic Solutions (+20 pts each)">🎓 {{ entry.accepted_solutions_count }} Solutions</span>
+        <span title="Reviews, Completed Materials & Quizzes">⚡ {{ entry.learning_contributions }} Learning</span>
+      </div>
+      {% if entry.achievements %}
+      <div class="achievement-chips" style="justify-content:center;margin-top:10px">
+        {% for ach in entry.achievements %}
+          <span class="achievement-chip" title="{{ ach.desc }}">{{ ach.icon }} {{ ach.name }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Full Leaderboard Standings -->
+  <section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div>
+        <h2>Student Rankings</h2>
+        <p class="subtle" style="margin:2px 0 0;font-size:13px">
+          Sorted by: 1) Total Points · 2) Approved Notes · 3) Accepted Doubt Solutions · 4) Username
+        </p>
+      </div>
+      {% if my_rank_entry %}
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="tag">Your Rank: #{{ my_rank_entry.rank }} ({{ my_rank_entry.total_points }} pts)</span>
+        <a class="button small secondary" href="{% url 'points_history' %}">My Points History →</a>
+      </div>
+      {% endif %}
+    </div>
+
+    {% for entry in leaderboard %}
+    <div class="leaderboard-row {% if user.is_authenticated and entry.user == user %}is-me{% endif %}">
+      <div>
+        <span class="rank-badge r-{{ entry.rank }}">#{{ entry.rank }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        {% if entry.avatar_url %}
+          <img src="{{ entry.avatar_url }}" alt="{{ entry.username }}" class="lb-avatar-sm">
+        {% else %}
+          <span class="gc-msg-avatar" style="width:36px;height:36px;font-size:14px">{{ entry.username|slice:":1"|upper }}</span>
+        {% endif %}
+        <div>
+          <b style="color:var(--saas-text);font-size:15.5px">@{{ entry.username }}</b>
+          {% if user.is_authenticated and entry.user == user %}
+            <small style="color:var(--saas-purple);font-weight:700">(You)</small>
+          {% endif %}
+          <small style="display:block">{{ entry.institution }} · {{ entry.course }}</small>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px">
+            <span class="tier-pill {{ entry.tier_class }}">{{ entry.badge }}</span>
+            {% for ach in entry.achievements %}
+              <span class="achievement-chip" title="{{ ach.desc }}">{{ ach.icon }} {{ ach.name }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="contrib-metrics">
+        <span title="Approved Study Notes (+25 pts)">📚 {{ entry.notes_count }} notes</span>
+        <span title="Accepted Academic Doubt Solutions (+20 pts)">🎓 {{ entry.accepted_solutions_count }} solutions</span>
+        <span title="Reviews (+15), Completed Materials (+10) & Quizzes (+10)">⚡ {{ entry.learning_contributions }} learning</span>
+      </div>
+      <div class="points-total">
+        {{ entry.total_points }} pts
+        {% if user.is_authenticated and entry.user == user %}
+          <div style="margin-top:4px">
+            <a href="{% url 'points_history' %}" style="font-size:11.5px;font-weight:600">History →</a>
+          </div>
+        {% elif user.is_staff %}
+          <div style="margin-top:4px">
+            <a href="{% url 'points_history' %}?user_id={{ entry.user.pk }}" style="font-size:11.5px;font-weight:600">Audit →</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <p class="empty">No contributors yet.</p>
+    {% endfor %}
+  </section>
+</div>
+
+<!-- =====================================================================
+     TAB 2 — HOW TO EARN POINTS (TRANSPARENT REWARD & ANTI-SPAM GUIDE)
+     ===================================================================== -->
+<div id="lb-panel-earn" style="{% if active_tab != 'earn' %}display:none{% endif %}">
+  <section class="panel" style="margin-bottom:24px">
+    <span class="eyebrow">TRANSPARENT ACADEMIC MERIT SYSTEM</span>
+    <h2>How to Earn StudySphere Points</h2>
+    <p class="lead" style="margin:6px 0 20px">
+      StudySphere rewards meaningful academic contributions rather than message volume. Help your classmates, share knowledge, and grow your campus learning community.
+    </p>
+
+    <div class="tx-table-wrap">
+      <table class="tx-table">
+        <thead>
+          <tr>
+            <th>Activity</th>
+            <th>Reward</th>
+            <th>Conditions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>📤 Share Study Notes</b></td>
+            <td><span class="tx-pts earned">+25 pts</span></td>
+            <td>Published and approved in the community library (automatically revoked if hidden for inaccuracy).</td>
+          </tr>
+          <tr>
+            <td><b>⭐ Resource Review</b></td>
+            <td><span class="tx-pts earned">+15 pts</span></td>
+            <td>Valid peer rating (1–5 stars) and written review on a study material.</td>
+          </tr>
+          <tr>
+            <td><b>🎓 Solve Academic Doubt</b></td>
+            <td><span class="tx-pts earned">+20 pts</span></td>
+            <td>Accepted solution in the Academic Doubts forum (verified by the question author or a moderator).</td>
+          </tr>
+          <tr>
+            <td><b>✅ Complete Material</b></td>
+            <td><span class="tx-pts earned">+10 pts</span></td>
+            <td>Completed study material scheduled for spaced-repetition review.</td>
+          </tr>
+          <tr>
+            <td><b>✨ Complete AI Quiz</b></td>
+            <td><span class="tx-pts earned">+10 pts</span></td>
+            <td>Valid completed practice quiz attempt in AI Study Studio.</td>
+          </tr>
+          <tr>
+            <td><b>💬 General Talk</b></td>
+            <td><span class="tx-pts neutral">0 pts</span></td>
+            <td>No points — casual group chat messages never inflate leaderboard scores.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="two-column equal">
+    <!-- Anti-Spam & Daily Fairness Rules -->
+    <section class="panel">
+      <span class="eyebrow">FAIRNESS &amp; INTEGRITY</span>
+      <h2>Anti-Spam &amp; Daily Reward Limits</h2>
+      <ul class="lp-benefit-list" style="margin-top:14px">
+        <li><b>One Reward per Academic Doubt:</b> Only the single accepted solution earns +20 points. Asking a doubt or posting ordinary unaccepted replies awards 0 points.</li>
+        <li><b>No Self-Answer Rewards:</b> Students cannot accept their own replies or earn points on their own doubts.</li>
+        <li><b>Meaningful Explanations Required:</b> Accepted solutions must contain at least 15 characters and 3 distinct words.</li>
+        <li><b>Daily Doubt-Solving Cap:</b> Maximum <b>{{ max_daily_doubt_rewards|default:5 }} rewarded solutions</b> (<b>{{ max_daily_doubt_points|default:100 }} points</b>) per student per day.</li>
+        <li><b>Anti-Collusion Protection:</b> Repeated solution rewards between the same two students are automatically rate-limited.</li>
+        <li><b>Moderator Audit &amp; Revocation:</b> Staff moderators can revoke fraudulent rewards; all awards and deductions remain permanently visible in your Points History ledger.</li>
+      </ul>
+    </section>
+
+    <!-- Primary Badges & Achievement Badges -->
+    <section class="panel">
+      <span class="eyebrow">RANKS &amp; MILESTONES</span>
+      <h2>Badges &amp; Achievements</h2>
+      <p class="subtle" style="margin:6px 0 12px;font-size:13.5px"><b>Primary Contributor Tiers (Displayed on Leaderboard):</b></p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+        <div class="list-row" style="padding:8px 10px"><span class="tier-pill tier-gold">👑 Grandmaster Mentor</span><span>120+ Total Points</span></div>
+        <div class="list-row" style="padding:8px 10px"><span class="tier-pill tier-emerald">📚 Top Note Sharer</span><span>At least 2 Approved Notes</span></div>
+        <div class="list-row" style="padding:8px 10px"><span class="tier-pill tier-cyan">💡 Doubt Solver</span><span>At least 2 Accepted Solutions</span></div>
+        <div class="list-row" style="padding:8px 10px"><span class="tier-pill tier-indigo">🚀 Active Scholar</span><span>Default Campus Tier</span></div>
+      </div>
+
+      <p class="subtle" style="margin:6px 0 10px;font-size:13.5px"><b>Special Achievement Badges:</b></p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="list-row" style="padding:8px 10px"><span class="achievement-chip">🏅 Problem Solver</span><span>10 Accepted Solutions</span></div>
+        <div class="list-row" style="padding:8px 10px"><span class="achievement-chip">📖 Knowledge Contributor</span><span>5 Approved Study Notes</span></div>
+        <div class="list-row" style="padding:8px 10px"><span class="achievement-chip">🔥 Consistent Learner</span><span>7 Consecutive Active Days</span></div>
+        <div class="list-row" style="padding:8px 10px"><span class="achievement-chip">🌟 Campus Legend</span><span>500+ Total Points</span></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const buttons = document.querySelectorAll('[data-lb-tab]');
+    const panelLb = document.getElementById('lb-panel-leaderboard');
+    const panelEarn = document.getElementById('lb-panel-earn');
+    buttons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const target = btn.getAttribute('data-lb-tab');
+        buttons.forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        if (target === 'earn') {
+          panelLb.style.display = 'none';
+          panelEarn.style.display = 'block';
+        } else {
+          panelLb.style.display = 'block';
+          panelEarn.style.display = 'none';
+        }
+      });
+    });
+  })();
+</script>
+
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block title %}Alerts | StudySphere{% endblock %}{% block content %}
+<div class="subpage-backbar">
+  <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Default Dashboard</a>
+</div>
+<div class="page-heading" style="margin-top:18px"><div><p class="eyebrow">COMMUNITY ACTIVITY</p><h1>Your alerts</h1></div></div><section class="panel">{% for notification in notifications %}<a class="list-row" href="{{ notification.link|default:'#' }}"><span><b>{{ notification.text }}</b><small>{{ notification.created_at|date:"M j, g:i A" }}</small></span><span>→</span></a>{% empty %}<p class="empty">You’re all caught up.</p>{% endfor %}</section>{% endblock %}

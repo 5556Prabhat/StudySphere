@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Verify OTP | StudySphere{% endblock %}
+{% block content %}
+<section class="form-card narrow">
+  <p class="eyebrow">STEP 2 OF 3 · VERIFY EMAIL OTP</p>
+  <h1>Enter 6-Digit OTP</h1>
+  <p class="subtle" style="margin-top:0">We sent a 6-digit verification code to <b>{{ masked_email }}</b>. Check your email inbox (and Spam folder) and enter the code below.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <p>
+      <label for="otp">6-Digit OTP Code</label>
+      <input id="otp" type="text" name="otp" maxlength="6" pattern="\d{6}" placeholder="123456" style="font:700 22px 'DM Mono',monospace;letter-spacing:6px;text-align:center" required>
+    </p>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:14px">
+      <button class="button" type="submit">Verify OTP →</button>
+      <a class="button secondary" href="{% url 'forgot_password' %}">Resend OTP</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

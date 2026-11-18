@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Shared Notes Library | StudySphere{% endblock %}
+{% block content %}
+<div class="subpage-backbar">
+  {% if user.is_authenticated %}
+  <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Default Dashboard</a>
+  {% else %}
+  <a class="button small secondary" href="{% url 'home' %}">← Back to Home</a>
+  {% endif %}
+  {% if user.is_authenticated %}
+  <a class="button small" href="{% url 'material_create' %}">+ Share Notes (+25 pts)</a>
+  {% endif %}
+</div>
+
+<div class="page-heading" style="margin-top:18px">
+  <div>
+    <p class="eyebrow">COMMUNITY KNOWLEDGE BASE</p>
+    <h1>Shared Notes by Users</h1>
+    <p class="lead">Search and explore verified notes, PDFs, Word/PowerPoint decks, and past papers shared across subjects.</p>
+  </div>
+</div>
+
+<form class="search-bar" method="get">
+  <input name="q" value="{{ query }}" placeholder="Search titles, topics, or keywords">
+  <select name="subject">
+    <option value="">All subjects</option>
+    {% for subject in subjects %}
+    <option value="{{ subject }}" {% if subject == selected_subject %}selected{% endif %}>{{ subject }}</option>
+    {% endfor %}
+  </select>
+  <button class="button">Search</button>
+</form>
+
+<div class="card-grid">
+  {% for material in materials %}
+  <article class="card">
+    <span class="tag">{{ material.get_material_type_display }}</span>
+    <h3><a href="{{ material.get_absolute_url }}">{{ material.title }}</a></h3>
+    <p>{{ material.description|truncatechars:130 }}</p>
+    <div class="card-meta">
+      <span>{{ material.subject }}{% if material.topic %} · {{ material.topic }}{% endif %} · by <b>@{{ material.owner.username }}</b></span>
+      <span class="rating">★ {{ material.average_rating|floatformat:1 }}</span>
+    </div>
+  </article>
+  {% empty %}
+  <p class="empty">No resources match that search yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}
