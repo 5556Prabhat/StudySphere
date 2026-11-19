@@ -1,5 +1,6 @@
+import re
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from .models import (
     AcademicDoubt,
@@ -14,12 +15,47 @@ from .models import (
 )
 
 
+def validate_password_strength(password):
+    """Require at least 6 characters and at least one special character."""
+    if not password or len(password) < 6 or not re.search(r"[^A-Za-z0-9]", password):
+        raise forms.ValidationError(
+            "Password must be at least 6 characters long and include at least one special character (e.g. @, #, $, !, %, *, -)."
+        )
+    return password
+
+
+class CustomLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.help_text = ""
+        self.fields["username"].widget.attrs.update({"placeholder": "Enter your username"})
+        self.fields["password"].widget.attrs.update({"placeholder": "Enter your password"})
+
+    def clean_password(self):
+        password = self.cleaned_data.get("password", "")
+        return validate_password_strength(password)
+
+
 class SignUpForm(UserCreationForm):
     email = forms.EmailField(required=True)
 
     class Meta(UserCreationForm.Meta):
         model = User
         fields = ("username", "email", "password1", "password2")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.help_text = ""
+        self.fields["username"].widget.attrs.update({"placeholder": "Choose a username"})
+        self.fields["email"].widget.attrs.update({"placeholder": "you@example.com"})
+        self.fields["password1"].widget.attrs.update({"placeholder": "Create a password"})
+        self.fields["password2"].widget.attrs.update({"placeholder": "Confirm your password"})
+
+    def clean_password1(self):
+        password1 = self.cleaned_data.get("password1", "")
+        return validate_password_strength(password1)
 
 
 class MaterialForm(forms.ModelForm):
@@ -61,10 +97,23 @@ class ReviewForm(forms.ModelForm):
 
 
 class GroupForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "subject" in self.fields:
+            self.fields["subject"].required = False
+
     class Meta:
         model = StudyGroup
-        fields = ("name", "subject", "description")
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        fields = ("name", "description", "subject")
+        labels = {
+            "name": "Group Name",
+            "description": "Group Info / Description",
+            "subject": "Subject (Optional)",
+        }
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "e.g. DSA & Competitive Coding Squad"}),
+            "description": forms.Textarea(attrs={"rows": 3, "placeholder": "Describe what your study group is about…"}),
+        }
 
 
 class MessageForm(forms.ModelForm):

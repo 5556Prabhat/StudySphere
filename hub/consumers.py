@@ -29,6 +29,9 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         await self.send(text_data=json.dumps(event["message"]))
 
+    async def chat_delete(self, event):
+        await self.send(text_data=json.dumps({"action": "delete_message", "message_id": event["message_id"]}))
+
     @database_sync_to_async
     def is_member(self):
         from .models import GroupMembership
@@ -50,4 +53,10 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
             Notification(user=member, text=f"New message in {group.name} from {self.scope['user'].username}.", link=f"/groups/{group.pk}/")
             for member in group.members.exclude(pk=self.scope["user"].pk)
         ])
-        return {"author": self.scope["user"].username, "body": message.body, "created_at": message.created_at.strftime("%b %d, %I:%M %p")}
+        return {
+            "id": message.pk,
+            "author": self.scope["user"].username,
+            "is_admin": group.owner_id == self.scope["user"].pk,
+            "body": message.body,
+            "created_at": message.created_at.strftime("%I:%M %p").lstrip("0"),
+        }

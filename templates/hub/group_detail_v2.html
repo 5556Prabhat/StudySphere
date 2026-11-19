@@ -1,134 +1,325 @@
 {% extends 'base.html' %}
 {% block title %}{{ group.name }} | StudySphere{% endblock %}
 {% block content %}
-<div class="subpage-backbar">
-  <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Dashboard</a>
-  <a class="text-action" href="{% url 'group_list' %}">All Study Groups →</a>
-</div>
-
-<div class="page-heading" style="margin-top:16px">
-  <div>
-    {% if is_global_gc %}
-      <span class="tag indigo"><span class="live-dot"></span>DEFAULT CAMPUS GROUP CHAT · ALL STUDENTS CONNECTED</span>
-    {% else %}
-      <span class="tag warm">{{ group.subject }}</span>
-    {% endif %}
-    <h1>{{ group.name }}</h1>
-    <p class="lead">{{ group.description }}</p>
+<div class="wa-page-header">
+  <div class="wa-header-left">
+    <a class="wa-back-btn" href="{% url 'dashboard' %}" title="Back to Dashboard" aria-label="Back">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </a>
+    <div class="wa-room-avatar">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span class="wa-online-dot"></span>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <h1 class="wa-room-title">{{ group.name }}</h1>
+        {% if not is_global_gc and group.group_code %}
+          <button
+            type="button"
+            class="collab-copy-id-btn"
+            onclick="navigator.clipboard && navigator.clipboard.writeText('{{ group.group_code }}'); this.querySelector('.copy-tag').textContent='Copied!';"
+            title="Copy Group ID"
+          >
+            <span>ID: <b>{{ group.group_code }}</b></span>
+            <span class="copy-tag">Copy</span>
+          </button>
+        {% endif %}
+        {% if not is_global_gc and group.owner == user %}
+          <span class="wa-admin-tag">👑 Admin</span>
+        {% endif %}
+      </div>
+    </div>
   </div>
-  {% if user.is_authenticated and not is_member %}
-  <form method="post" action="{% url 'join_group' group.pk %}">
-    {% csrf_token %}
-    <button class="button">Join group</button>
-  </form>
+
+  <!-- Clean 2-Tab Toggle: General Talk vs Academic Doubts -->
+  <div class="gc-tabs-bar wa-tabs-bar" role="tablist" aria-label="Group Chat Categories">
+    <button
+      type="button"
+      class="gc-tab-btn {% if active_tab != 'doubts' %}active{% endif %}"
+      data-gc-tab="general"
+      role="tab"
+      aria-selected="{% if active_tab != 'doubts' %}true{% else %}false{% endif %}"
+    >
+      <span class="gc-tab-icon">💬</span>
+      <span>General Talk</span>
+    </button>
+
+    <button
+      type="button"
+      class="gc-tab-btn {% if active_tab == 'doubts' %}active{% endif %}"
+      data-gc-tab="doubts"
+      role="tab"
+      aria-selected="{% if active_tab == 'doubts' %}true{% else %}false{% endif %}"
+    >
+      <span class="gc-tab-icon">🎓</span>
+      <span>Academic Doubts</span>
+      <span class="gc-tab-pill reward">+20 pts</span>
+      {% if unresolved_doubt_count %}
+        <span class="gc-tab-count">{{ unresolved_doubt_count }}</span>
+      {% endif %}
+    </button>
+  </div>
+
+  {% if not is_global_gc and is_member %}
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <button
+        type="button"
+        class="wa-settings-toggle-btn"
+        onclick="toggleGroupSettingsPanel()"
+      >
+        <span>⚙️ Settings</span>
+        {% if is_group_admin and pending_group_requests %}
+          <span class="collab-req-dot">{{ pending_group_requests|length }}</span>
+        {% endif %}
+      </button>
+
+      {% if group.owner != user %}
+        <form method="post" action="{% url 'leave_group' group.pk %}" style="margin:0">
+          {% csrf_token %}
+          <button type="submit" class="wa-leave-btn">Leave Group</button>
+        </form>
+      {% endif %}
+    </div>
+  {% elif user.is_authenticated and not is_member %}
+    {% if user_pending_invitation %}
+      <form method="post" action="{% url 'respond_group_access_request' user_pending_invitation.pk %}" style="margin:0">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="accept">
+        <button class="collab-btn-accept">✓ Accept Invitation</button>
+      </form>
+    {% elif user_has_pending_request %}
+      <span class="collab-pending-status">⏳ Pending Admin Approval</span>
+    {% else %}
+      <form method="post" action="{% url 'join_group' group.pk %}" style="margin:0">
+        {% csrf_token %}
+        <button class="button small">Join Group</button>
+      </form>
+    {% endif %}
   {% endif %}
 </div>
 
-<!-- TWO SEPARATE GROUP CHAT TABS: TAB A (GENERAL TALK) & TAB B (ACADEMIC DOUBTS) -->
-<div class="gc-tabs-bar" role="tablist" aria-label="Group Chat Categories">
-  <button
-    type="button"
-    class="gc-tab-btn {% if active_tab != 'doubts' %}active{% endif %}"
-    data-gc-tab="general"
-    role="tab"
-    aria-selected="{% if active_tab != 'doubts' %}true{% else %}false{% endif %}"
+{% if not is_global_gc and is_member %}
+  <!-- Collapsible Group Settings Panel (Invite, Join Requests, Transfer Admin, Leave / Delete Group) -->
+  <div
+    id="group-settings-panel"
+    class="wa-settings-panel"
+    style="{% if not pending_group_requests %}display:none{% endif %}"
   >
-    <span class="gc-tab-icon">💬</span>
-    <span>General Talk</span>
-    <span class="gc-tab-pill neutral">0 pts</span>
-  </button>
+    <div class="wa-settings-grid">
+      <!-- 1. Invite by @username -->
+      <div class="wa-settings-block">
+        <span class="wa-settings-label">Invite Member</span>
+        <form method="post" action="{% url 'invite_to_group' group.pk %}" class="collab-invite-bar">
+          {% csrf_token %}
+          <input type="text" name="username" placeholder="Enter @username…" required>
+          <button type="submit" class="collab-invite-btn">+ Invite</button>
+        </form>
+      </div>
 
-  <button
-    type="button"
-    class="gc-tab-btn {% if active_tab == 'doubts' %}active{% endif %}"
-    data-gc-tab="doubts"
-    role="tab"
-    aria-selected="{% if active_tab == 'doubts' %}true{% else %}false{% endif %}"
-  >
-    <span class="gc-tab-icon">🎓</span>
-    <span>Academic Doubts</span>
-    <span class="gc-tab-pill reward">+20 pts / Accepted Solution</span>
-    {% if unresolved_doubt_count %}
-      <span class="gc-tab-count">{{ unresolved_doubt_count }} open</span>
+      <!-- 2. Group Members & Admin Transfer / Leave / Delete -->
+      <div class="wa-settings-block">
+        <span class="wa-settings-label">Members ({{ group_members|length }})</span>
+        <div class="wa-members-chips">
+          {% for m in group_members %}
+            <span class="wa-member-chip {% if m == group.owner %}is-admin{% endif %}">
+              @{{ m.username }}
+              {% if m == group.owner %}<b>👑 Admin</b>{% endif %}
+            </span>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if group.owner == user %}
+        <!-- 3. Admin Controls: Transfer Admin, Leave, or Delete Group -->
+        <div class="wa-settings-block">
+          <span class="wa-settings-label">Admin Actions</span>
+          {% if other_members %}
+            <form method="post" action="{% url 'transfer_group_admin' group.pk %}" class="wa-transfer-form">
+              {% csrf_token %}
+              <select name="new_admin_id" class="wa-transfer-select" required>
+                <option value="" disabled selected>Transfer Admin to…</option>
+                {% for om in other_members %}
+                  <option value="{{ om.pk }}">@{{ om.username }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" name="and_leave" value="0" class="collab-invite-btn">Make Admin</button>
+              <button type="submit" name="and_leave" value="1" class="wa-leave-btn">Transfer &amp; Leave</button>
+            </form>
+          {% endif %}
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+            <form method="post" action="{% url 'leave_group' group.pk %}" style="margin:0">
+              {% csrf_token %}
+              <button type="submit" class="wa-leave-btn">Leave Group</button>
+            </form>
+            <form method="post" action="{% url 'delete_group' group.pk %}" style="margin:0">
+              {% csrf_token %}
+              <button type="submit" class="wa-delete-group-btn">🗑️ Delete Group</button>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if is_group_admin and pending_group_requests %}
+      <div class="wa-requests-bar">
+        <span class="wa-settings-label">Join Requests ({{ pending_group_requests|length }})</span>
+        <div class="collab-alert-list">
+          {% for req in pending_group_requests %}
+            <div class="collab-req-row">
+              <div class="collab-req-info">
+                <strong>@{{ req.user.username }}</strong>
+                <span>wants to join</span>
+              </div>
+              <div class="collab-req-btns">
+                <form method="post" action="{% url 'respond_group_access_request' req.pk %}" class="inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="accept">
+                  <button type="submit" class="collab-btn-accept">✓ Accept</button>
+                </form>
+                <form method="post" action="{% url 'respond_group_access_request' req.pk %}" class="inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="reject">
+                  <button type="submit" class="collab-btn-reject">✕ Decline</button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
     {% endif %}
-  </button>
-</div>
+  </div>
+{% endif %}
 
 <!-- =====================================================================
-     TAB A — GENERAL TALK (0 POINTS PER MESSAGE)
+     TAB A — GENERAL TALK (WHATSAPP / INSTAGRAM DM LAYOUT)
      ===================================================================== -->
 <section
   id="gc-panel-general"
-  class="discussion panel"
+  class="wa-chat-shell"
   style="{% if active_tab == 'doubts' %}display:none{% endif %}"
 >
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-    <div>
-      <h2><span class="live-dot"></span>General Talk</h2>
-      <p class="subtle" style="margin:2px 0 0;font-size:13.5px">
-        Casual student conversations, campus discussions, and general interactions.
-      </p>
-    </div>
-    <span class="tag">Casual Chat · 0 Points</span>
-  </div>
-
-  <div id="messages" class="chat-window" style="max-height:460px">
+  <div id="messages" class="wa-chat-stream">
     {% for message in general_messages %}
-      <article class="message {% if message.author == user %}own-message{% endif %}" id="msg-{{ message.pk }}">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="gc-msg-avatar">{{ message.author.username|slice:":1"|upper }}</span>
-            <b>@{{ message.author.username }}</b>
-            {% if message.is_system %}<span class="tag" style="font-size:10px;padding:2px 7px">System</span>{% endif %}
-            <small>{{ message.created_at|date:"M j, g:i A" }}</small>
-          </div>
-          {% if is_member %}
-          <button
-            type="button"
-            class="text-button"
-            style="font-size:12px"
-            onclick="setGeneralReply('{{ message.pk }}', '{{ message.author.username|escapejs }}')"
-          >
-            Reply
-          </button>
-          {% endif %}
-        </div>
-        {% if message.reply_to %}
-          <div class="gc-reply-quote">
-            Replying to <b>@{{ message.reply_to.author.username }}</b>: “{{ message.reply_to.body|truncatechars:80 }}”
+      <article
+        class="wa-row {% if message.author == user %}is-mine{% else %}is-other{% endif %}"
+        id="msg-{{ message.pk }}"
+      >
+        {% if message.author != user %}
+          <div class="wa-avatar" title="@{{ message.author.username }}">
+            {{ message.author.username|slice:":1"|upper }}
           </div>
         {% endif %}
-        <p>{{ message.body|linebreaksbr }}</p>
+
+        <div class="wa-bubble {% if message.author == user %}mine-bubble{% else %}other-bubble{% endif %}">
+          <div class="wa-bubble-sender {% if message.author == user %}mine-sender{% endif %}">
+            <span>@{{ message.author.username }}</span>
+            {% if not is_global_gc and message.author_id == group.owner_id %}
+              <span class="wa-admin-tag" title="Group Admin">👑 Admin</span>
+            {% endif %}
+            {% if message.is_system %}<span class="wa-sys-badge">System</span>{% endif %}
+          </div>
+
+          {% if message.reply_to %}
+            <div class="wa-reply-quote">
+              <b>@{{ message.reply_to.author.username }}</b>
+              <span>{{ message.reply_to.body|truncatechars:85 }}</span>
+            </div>
+          {% endif %}
+
+          <div class="wa-bubble-text">{{ message.body|linebreaksbr }}</div>
+
+          <div class="wa-bubble-footer">
+            <span class="wa-time">{{ message.created_at|date:"g:i A" }}</span>
+            {% if message.author == user %}
+              <span class="wa-ticks" aria-hidden="true">✓✓</span>
+            {% endif %}
+
+            {% if is_member %}
+              <div class="wa-bubble-actions">
+                <button
+                  type="button"
+                  class="wa-action-btn"
+                  onclick="setGeneralReply('{{ message.pk }}', '{{ message.author.username|escapejs }}')"
+                >
+                  Reply
+                </button>
+                {% if message.author == user and not message.is_system or user.is_staff %}
+                  <form
+                    method="post"
+                    action="{% url 'delete_message' message.pk %}"
+                    class="inline gc-delete-msg-form"
+                    onsubmit="return deleteGeneralMessage(event, '{{ message.pk }}')"
+                  >
+                    {% csrf_token %}
+                    <button
+                      type="submit"
+                      class="wa-action-btn is-danger"
+                      title="Delete message"
+                      aria-label="Delete message"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
       </article>
     {% empty %}
-      <p class="empty">The conversation will start here.</p>
+      <div class="wa-empty-state">
+        <div class="wa-empty-icon">💬</div>
+        <p>No messages yet. Say hello to start the conversation!</p>
+      </div>
     {% endfor %}
   </div>
 
   {% if is_member %}
-    <form id="chat-form" method="post" action="{% url 'post_message' group.pk %}">
+    <form id="chat-form" class="wa-composer-wrap" method="post" action="{% url 'post_message' group.pk %}">
       {% csrf_token %}
       <input type="hidden" name="reply_to" id="general-reply-to" value="">
-      <div id="general-reply-banner" class="gc-reply-banner" style="display:none">
+      <div id="general-reply-banner" class="wa-reply-chip" style="display:none">
         <span id="general-reply-label">Replying to @user</span>
-        <button type="button" class="text-button" onclick="clearGeneralReply()">✕ Cancel</button>
+        <button type="button" class="wa-reply-close" onclick="clearGeneralReply()">✕</button>
       </div>
-      {{ message_form.as_p }}
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-        <small class="subtle">General Talk messages earn 0 points. Have an academic question? Switch to the <b>Academic Doubts</b> tab!</small>
-        <button class="button" type="submit">Send Message</button>
+      <div class="wa-composer-bar">
+        <textarea
+          name="body"
+          id="general-chat-input"
+          rows="1"
+          placeholder="Type a message…"
+          required
+        ></textarea>
+        <button class="wa-send-btn" type="submit" title="Send message" aria-label="Send message">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
       </div>
     </form>
+
     <script>
+      function toggleGroupSettingsPanel() {
+        const panel = document.getElementById('group-settings-panel');
+        if (panel) {
+          panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+      }
       function setGeneralReply(msgId, authorName) {
         const input = document.getElementById('general-reply-to');
         const banner = document.getElementById('general-reply-banner');
         const label = document.getElementById('general-reply-label');
+        const textarea = document.getElementById('general-chat-input');
         if (input && banner && label) {
           input.value = msgId;
-          label.textContent = 'Replying to @' + authorName;
+          label.textContent = '↩ Replying to @' + authorName;
           banner.style.display = 'flex';
-          const textarea = document.querySelector('#chat-form textarea');
           if (textarea) textarea.focus();
         }
       }
@@ -140,12 +331,61 @@
           banner.style.display = 'none';
         }
       }
+      function removeMessageNode(msgId) {
+        const el = document.getElementById('msg-' + msgId);
+        if (el) {
+          el.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+          el.style.opacity = '0';
+          el.style.transform = 'scale(0.92)';
+          setTimeout(() => el.remove(), 200);
+        }
+      }
+      function deleteGeneralMessage(event, msgId) {
+        event.preventDefault();
+        const formEl = event.currentTarget;
+        const csrfInput = formEl.querySelector('input[name="csrfmiddlewaretoken"]') || document.querySelector('#chat-form input[name="csrfmiddlewaretoken"]');
+        const csrfToken = csrfInput ? csrfInput.value : '';
+        fetch(formEl.action, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          }
+        })
+        .then(res => {
+          if (res.ok) {
+            removeMessageNode(msgId);
+          } else {
+            formEl.submit();
+          }
+        })
+        .catch(() => formEl.submit());
+        return false;
+      }
       (function() {
         const form = document.querySelector('#chat-form'),
-              body = form.querySelector('textarea'),
+              body = document.getElementById('general-chat-input'),
               replyInput = document.getElementById('general-reply-to'),
-              list = document.querySelector('#messages');
+              list = document.querySelector('#messages'),
+              currentUser = '{{ user.username|escapejs }}',
+              groupOwner = '{{ group.owner.username|escapejs }}',
+              isGlobalGc = {{ is_global_gc|yesno:"true,false" }},
+              isStaff = {{ user.is_staff|yesno:"true,false" }},
+              csrfInput = form.querySelector('input[name="csrfmiddlewaretoken"]'),
+              csrfToken = csrfInput ? csrfInput.value : '';
+
         list.scrollTop = list.scrollHeight;
+
+        body.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (body.value.trim()) {
+              form.requestSubmit();
+            }
+          }
+        });
+
         const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
         const socket = new WebSocket(`${protocol}://${location.host}/ws/groups/{{ group.pk }}/`);
         form.addEventListener('submit', e => {
@@ -156,193 +396,304 @@
           }
         });
         socket.onmessage = e => {
-          const m = JSON.parse(e.data),
-                article = document.createElement('article'),
-                name = document.createElement('b'),
-                time = document.createElement('small'),
-                text = document.createElement('p');
-          article.className = 'message' + (m.author === '{{ user.username|escapejs }}' ? ' own-message' : '');
-          name.textContent = '@' + m.author;
-          time.textContent = ' ' + m.created_at;
+          const m = JSON.parse(e.data);
+          if (m.action === 'delete_message' && m.message_id) {
+            removeMessageNode(m.message_id);
+            return;
+          }
+          const emptyNote = list.querySelector('.wa-empty-state');
+          if (emptyNote) emptyNote.remove();
+
+          const isOwn = m.author === currentUser;
+          const isAdminMsg = !isGlobalGc && (m.is_admin || m.author === groupOwner);
+          const article = document.createElement('article');
+          article.className = 'wa-row ' + (isOwn ? 'is-mine' : 'is-other') + ' is-new';
+          if (m.id) article.id = 'msg-' + m.id;
+
+          if (!isOwn) {
+            const avatar = document.createElement('div');
+            avatar.className = 'wa-avatar';
+            avatar.textContent = (m.author || '?').slice(0, 1).toUpperCase();
+            article.appendChild(avatar);
+          }
+
+          const bubble = document.createElement('div');
+          bubble.className = 'wa-bubble ' + (isOwn ? 'mine-bubble' : 'other-bubble');
+
+          const sender = document.createElement('div');
+          sender.className = 'wa-bubble-sender' + (isOwn ? ' mine-sender' : '');
+          const sName = document.createElement('span');
+          sName.textContent = '@' + m.author;
+          sender.appendChild(sName);
+          if (isAdminMsg) {
+            const adminTag = document.createElement('span');
+            adminTag.className = 'wa-admin-tag';
+            adminTag.textContent = '👑 Admin';
+            sender.appendChild(adminTag);
+          }
+          bubble.appendChild(sender);
+
+          const text = document.createElement('div');
+          text.className = 'wa-bubble-text';
           text.textContent = m.body;
-          article.append(name, time, text);
-          list.append(article);
+          bubble.appendChild(text);
+
+          const footer = document.createElement('div');
+          footer.className = 'wa-bubble-footer';
+
+          const time = document.createElement('span');
+          time.className = 'wa-time';
+          time.textContent = m.created_at;
+          footer.appendChild(time);
+
+          if (isOwn) {
+            const ticks = document.createElement('span');
+            ticks.className = 'wa-ticks';
+            ticks.textContent = '✓✓';
+            footer.appendChild(ticks);
+          }
+
+          if (m.id) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'wa-bubble-actions';
+
+            const replyBtn = document.createElement('button');
+            replyBtn.type = 'button';
+            replyBtn.className = 'wa-action-btn';
+            replyBtn.textContent = 'Reply';
+            replyBtn.addEventListener('click', () => setGeneralReply(m.id, m.author));
+            actionsDiv.appendChild(replyBtn);
+
+            if (isOwn || isStaff) {
+              const delForm = document.createElement('form');
+              delForm.method = 'post';
+              delForm.action = `/messages/${m.id}/delete/`;
+              delForm.className = 'inline gc-delete-msg-form';
+              delForm.addEventListener('submit', ev => deleteGeneralMessage(ev, m.id));
+
+              const csrfField = document.createElement('input');
+              csrfField.type = 'hidden';
+              csrfField.name = 'csrfmiddlewaretoken';
+              csrfField.value = csrfToken;
+
+              const delBtn = document.createElement('button');
+              delBtn.type = 'submit';
+              delBtn.className = 'wa-action-btn is-danger';
+              delBtn.title = 'Delete message';
+              delBtn.textContent = 'Delete';
+
+              delForm.append(csrfField, delBtn);
+              actionsDiv.appendChild(delForm);
+            }
+            footer.appendChild(actionsDiv);
+          }
+
+          bubble.appendChild(footer);
+          article.appendChild(bubble);
+          list.appendChild(article);
           list.scrollTop = list.scrollHeight;
         };
       })();
     </script>
   {% elif user.is_authenticated %}
-    <p class="subtle">Join the group to add to the discussion.</p>
+    <div class="wa-composer-locked">Join this group to send messages.</div>
   {% else %}
-    <a href="{% url 'login' %}">Sign in to join the discussion</a>
+    <div class="wa-composer-locked"><a href="{% url 'login' %}">Sign in to join the conversation</a></div>
   {% endif %}
 </section>
 
 <!-- =====================================================================
-     TAB B — ACADEMIC DOUBTS (+20 POINTS FOR ACCEPTED SOLUTION)
+     TAB B — ACADEMIC DOUBTS (SAME CLEAN WHATSAPP / INSTAGRAM CHAT STYLE)
      ===================================================================== -->
 <section
   id="gc-panel-doubts"
-  class="discussion"
+  class="wa-chat-shell"
   style="{% if active_tab != 'doubts' %}display:none{% endif %}"
 >
-  <!-- Ask a New Academic Doubt Card -->
-  <div class="panel" style="margin-bottom:24px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:14px">
-      <div>
-        <span class="eyebrow">ACADEMIC Q&amp;A FORUM</span>
-        <h2>Ask an Academic Doubt</h2>
-        <p class="subtle" style="margin:4px 0 0;font-size:13.5px">
-          Post a clear question with subject details. When a classmate provides a helpful explanation and you accept it as the solution, they earn <b>+20 Leaderboard points</b>!
-        </p>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <span class="tag">{{ unresolved_doubt_count }} Unresolved</span>
-        <span class="tag indigo">{{ resolved_doubt_count }} Resolved</span>
-      </div>
-    </div>
+  <div id="doubts-stream" class="wa-chat-stream">
+    {% for doubt in doubts reversed %}
+      <article
+        class="wa-row {% if doubt.author == user %}is-mine{% else %}is-other{% endif %}"
+        id="doubt-{{ doubt.pk }}"
+      >
+        {% if doubt.author != user %}
+          <div class="wa-avatar" title="@{{ doubt.author.username }}">
+            {{ doubt.author.username|slice:":1"|upper }}
+          </div>
+        {% endif %}
 
-    {% if is_member %}
-    <form method="post" action="{% url 'create_doubt' group.pk %}" class="doubt-create-form">
-      {% csrf_token %}
-      <div class="doubt-form-grid">
-        <p style="margin:0">
-          <label for="{{ doubt_form.title.id_for_label }}">{{ doubt_form.title.label }}</label>
-          {{ doubt_form.title }}
-        </p>
-        <p style="margin:0">
-          <label for="{{ doubt_form.subject.id_for_label }}">{{ doubt_form.subject.label }}</label>
-          {{ doubt_form.subject }}
-        </p>
-        <p style="margin:0">
-          <label for="{{ doubt_form.tagged_username.id_for_label }}">{{ doubt_form.tagged_username.label }}</label>
-          {{ doubt_form.tagged_username }}
-        </p>
-      </div>
-      <p style="margin:12px 0">
-        <label for="{{ doubt_form.body.id_for_label }}">{{ doubt_form.body.label }}</label>
-        {{ doubt_form.body }}
-      </p>
-      <button type="submit" class="button">Post Academic Doubt</button>
-    </form>
-    {% elif user.is_authenticated %}
-      <p class="subtle">Join this study group to ask or answer academic doubts.</p>
-    {% else %}
-      <a class="button small" href="{% url 'login' %}">Sign in to ask a doubt</a>
-    {% endif %}
-  </div>
-
-  <!-- Existing Academic Doubts Feed -->
-  <div class="doubts-feed">
-    {% for doubt in doubts %}
-      <article class="panel doubt-card {% if doubt.is_resolved %}doubt-resolved{% endif %}" id="doubt-{{ doubt.pk }}">
-        <div class="doubt-card-header">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="wa-bubble {% if doubt.author == user %}mine-bubble{% else %}other-bubble{% endif %} wa-doubt-bubble">
+          <div class="wa-doubt-top">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="wa-doubt-author">@{{ doubt.author.username }}</span>
+              {% if not is_global_gc and doubt.author_id == group.owner_id %}
+                <span class="wa-admin-tag" title="Group Admin">👑 Admin</span>
+              {% endif %}
+            </div>
             {% if doubt.reward_revoked %}
-              <span class="doubt-status-badge status-revoked">⚠ Reward Revoked by Moderator</span>
+              <span class="wa-doubt-badge is-revoked">⚠ Revoked</span>
             {% elif doubt.is_resolved %}
-              <span class="doubt-status-badge status-resolved">✓ Resolved · Solution Accepted (+20 pts)</span>
+              <span class="wa-doubt-badge is-solved">✓ Solved · +20 pts</span>
             {% else %}
-              <span class="doubt-status-badge status-open">● Unresolved Doubt</span>
-            {% endif %}
-            <span class="tag">{{ doubt.subject }}</span>
-            {% if doubt.tagged_username %}
-              <span class="tag indigo">Tagged: @{{ doubt.tagged_username }}</span>
+              <span class="wa-doubt-badge is-open">🎓 Doubt</span>
             {% endif %}
           </div>
-          <span class="subtle" style="font-size:12.5px">
-            {{ doubt.replies.count }} repl{{ doubt.replies.count|pluralize:"y,ies" }} · Asked {{ doubt.created_at|date:"M j, g:i A" }}
-          </span>
-        </div>
 
-        <h3 class="doubt-title">{{ doubt.title }}</h3>
-        <p class="doubt-body">{{ doubt.body|linebreaksbr }}</p>
-
-        <div class="doubt-meta-bar">
-          <span>Asked by <b>@{{ doubt.author.username }}</b></span>
-          {% if doubt.is_resolved and doubt.solved_by %}
-            <span class="solved-by-pill">
-              🏆 Solved by <b>@{{ doubt.solved_by.username }}</b>
-              {% if not doubt.reward_revoked %}(+20 pts awarded){% endif %}
-            </span>
+          {% if doubt.title and doubt.title != doubt.body|truncatechars:120 %}
+            <div class="wa-doubt-heading">{{ doubt.title }}</div>
           {% endif %}
-          {% if user.is_staff and doubt.is_resolved and not doubt.reward_revoked %}
-            <form method="post" action="{% url 'revoke_doubt_reward' doubt.pk %}" class="inline" style="margin-left:auto">
-              {% csrf_token %}
-              <input type="hidden" name="reason" value="Flagged or low-quality solution revoked by moderator">
-              <button type="submit" class="button small secondary" style="color:#DC2626;border-color:#FECACA">
-                🛡️ Revoke +20 pts Reward
-              </button>
-            </form>
-          {% endif %}
-        </div>
+          <div class="wa-bubble-text">{{ doubt.body|linebreaksbr }}</div>
 
-        <!-- Replies List under Parent Doubt -->
-        <div class="doubt-replies-list">
-          {% for reply in doubt.replies.all %}
-            <div class="doubt-reply-item {% if reply.is_accepted %}accepted-solution{% endif %}" id="reply-{{ reply.pk }}">
-              <div class="doubt-reply-header">
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                  <span class="gc-msg-avatar">{{ reply.author.username|slice:":1"|upper }}</span>
-                  <b>@{{ reply.author.username }}</b>
-                  <small>{{ reply.created_at|date:"M j, g:i A" }}</small>
-                  {% if reply.is_accepted %}
-                    <span class="accepted-solution-pill">✓ Accepted Solution · +20 pts</span>
-                  {% endif %}
-                </div>
-
-                {% if not doubt.is_resolved and user.is_authenticated %}
-                  {% if user == doubt.author or user.is_staff %}
-                    {% if reply.author != doubt.author %}
-                      <form method="post" action="{% url 'accept_doubt_reply' doubt.pk reply.pk %}" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" class="button small" style="padding:6px 12px;font-size:12px">
-                          ✓ Accept as Solution (+20 pts)
-                        </button>
-                      </form>
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
+          <div class="wa-bubble-footer">
+            <span class="wa-time">{{ doubt.created_at|date:"M j, g:i A" }}</span>
+            {% if doubt.is_resolved and doubt.solved_by %}
+              <span class="wa-solved-by">🏆 @{{ doubt.solved_by.username }}</span>
+            {% endif %}
+            {% if is_member %}
+              <div class="wa-bubble-actions">
+                <button
+                  type="button"
+                  class="wa-action-btn"
+                  onclick="setDoubtReply('{{ doubt.pk }}', '{{ doubt.author.username|escapejs }}', '{{ doubt.title|default:doubt.body|truncatechars:50|escapejs }}')"
+                >
+                  Reply ({{ doubt.replies.count }})
+                </button>
               </div>
-              <p class="doubt-reply-body">{{ reply.body|linebreaksbr }}</p>
-            </div>
-          {% empty %}
-            <p class="empty" style="margin:8px 0">No explanations posted yet. Be the first to help @{{ doubt.author.username }} and earn +20 points!</p>
-          {% endfor %}
+            {% endif %}
+          </div>
         </div>
-
-        <!-- Reply Form under Doubt -->
-        {% if is_member %}
-          <form method="post" action="{% url 'reply_doubt' doubt.pk %}" class="doubt-reply-form">
-            {% csrf_token %}
-            <textarea
-              name="body"
-              rows="2"
-              placeholder="Write a clear explanation for @{{ doubt.author.username }} (at least 15 chars &amp; 3 words to qualify for +20 pts)…"
-              required
-            ></textarea>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px">
-              <small class="subtle">
-                {% if doubt.is_resolved %}
-                  This doubt is resolved, but you can still add follow-up notes.
-                {% elif user == doubt.author %}
-                  Add clarifying details to your doubt (self-replies do not earn points).
-                {% else %}
-                  Earn <b>+20 pts</b> if @{{ doubt.author.username }} accepts your explanation!
-                {% endif %}
-              </small>
-              <button type="submit" class="button small">Post Explanation</button>
-            </div>
-          </form>
-        {% endif %}
       </article>
+
+      {% for reply in doubt.replies.all %}
+        <article
+          class="wa-row is-reply-row {% if reply.author == user %}is-mine{% else %}is-other{% endif %}"
+          id="reply-{{ reply.pk }}"
+        >
+          {% if reply.author != user %}
+            <div class="wa-avatar" title="@{{ reply.author.username }}">
+              {{ reply.author.username|slice:":1"|upper }}
+            </div>
+          {% endif %}
+
+          <div class="wa-bubble {% if reply.author == user %}mine-bubble{% else %}other-bubble{% endif %} {% if reply.is_accepted %}wa-accepted-bubble{% endif %}">
+            <div class="wa-reply-quote">
+              <b>↪ @{{ doubt.author.username }}’s doubt</b>
+              <span>{{ doubt.title|default:doubt.body|truncatechars:70 }}</span>
+            </div>
+
+            <div class="wa-bubble-sender {% if reply.author == user %}mine-sender{% endif %}">
+              <span>@{{ reply.author.username }}</span>
+              {% if not is_global_gc and reply.author_id == group.owner_id %}
+                <span class="wa-admin-tag" title="Group Admin">👑 Admin</span>
+              {% endif %}
+            </div>
+
+            <div class="wa-bubble-text">{{ reply.body|linebreaksbr }}</div>
+
+            <div class="wa-bubble-footer">
+              <span class="wa-time">{{ reply.created_at|date:"g:i A" }}</span>
+              {% if reply.is_accepted %}
+                <span class="wa-accepted-pill">✓ Accepted Solution (+20 pts)</span>
+              {% elif not doubt.is_resolved and user.is_authenticated %}
+                {% if user == doubt.author or user.is_staff %}
+                  {% if reply.author != doubt.author %}
+                    <form method="post" action="{% url 'accept_doubt_reply' doubt.pk reply.pk %}" class="inline" style="margin:0">
+                      {% csrf_token %}
+                      <button type="submit" class="wa-accept-btn">
+                        ✓ Accept (+20 pts)
+                      </button>
+                    </form>
+                  {% endif %}
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      {% endfor %}
     {% empty %}
-      <section class="panel" style="text-align:center;padding:40px 24px">
-        <h3>No academic doubts posted yet.</h3>
-        <p class="subtle">Have a question about an algorithm, theorem, or lecture topic? Post the first academic doubt above!</p>
-      </section>
+      <div class="wa-empty-state">
+        <div class="wa-empty-icon">🎓</div>
+        <p>No academic doubts yet. Type a question below!</p>
+      </div>
     {% endfor %}
   </div>
+
+  {% if is_member %}
+    <form
+      id="doubt-chat-form"
+      class="wa-composer-wrap"
+      method="post"
+      action="{% url 'create_doubt' group.pk %}"
+      data-create-url="{% url 'create_doubt' group.pk %}"
+    >
+      {% csrf_token %}
+      <div id="doubt-reply-banner" class="wa-reply-chip" style="display:none">
+        <span id="doubt-reply-label">Replying to @user’s doubt</span>
+        <button type="button" class="wa-reply-close" onclick="clearDoubtReply()">✕</button>
+      </div>
+      <div class="wa-composer-bar">
+        <textarea
+          name="body"
+          id="doubt-chat-input"
+          rows="1"
+          placeholder="Ask an academic doubt…"
+          required
+        ></textarea>
+        <button class="wa-send-btn" type="submit" title="Send" aria-label="Send">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </form>
+
+    <script>
+      function setDoubtReply(doubtId, authorName, previewText) {
+        const form = document.getElementById('doubt-chat-form');
+        const banner = document.getElementById('doubt-reply-banner');
+        const label = document.getElementById('doubt-reply-label');
+        const input = document.getElementById('doubt-chat-input');
+        if (form && banner && label && input) {
+          form.action = `/doubts/${doubtId}/reply/`;
+          label.textContent = `↩ Solving @${authorName}’s doubt: “${previewText}”`;
+          banner.style.display = 'flex';
+          input.placeholder = `Write your explanation for @${authorName}…`;
+          input.focus();
+        }
+      }
+      function clearDoubtReply() {
+        const form = document.getElementById('doubt-chat-form');
+        const banner = document.getElementById('doubt-reply-banner');
+        const input = document.getElementById('doubt-chat-input');
+        if (form && banner && input) {
+          form.action = form.getAttribute('data-create-url');
+          banner.style.display = 'none';
+          input.placeholder = 'Ask an academic doubt…';
+        }
+      }
+      (function() {
+        const dList = document.getElementById('doubts-stream');
+        const dForm = document.getElementById('doubt-chat-form');
+        const dInput = document.getElementById('doubt-chat-input');
+        if (dList) dList.scrollTop = dList.scrollHeight;
+        if (dInput && dForm) {
+          dInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              if (dInput.value.trim()) {
+                dForm.requestSubmit();
+              }
+            }
+          });
+        }
+      })();
+    </script>
+  {% elif user.is_authenticated %}
+    <div class="wa-composer-locked">Join this group to ask or answer academic doubts.</div>
+  {% else %}
+    <div class="wa-composer-locked"><a href="{% url 'login' %}">Sign in to ask or answer doubts</a></div>
+  {% endif %}
 </section>
 
 <script>
@@ -361,10 +712,14 @@
         btn.setAttribute('aria-selected', 'true');
         if (target === 'doubts') {
           panelGeneral.style.display = 'none';
-          panelDoubts.style.display = 'block';
+          panelDoubts.style.display = 'flex';
+          const ds = document.getElementById('doubts-stream');
+          if (ds) ds.scrollTop = ds.scrollHeight;
         } else {
-          panelGeneral.style.display = 'block';
+          panelGeneral.style.display = 'flex';
           panelDoubts.style.display = 'none';
+          const ms = document.getElementById('messages');
+          if (ms) ms.scrollTop = ms.scrollHeight;
         }
       });
     });

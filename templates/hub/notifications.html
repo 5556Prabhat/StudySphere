@@ -2,4 +2,24 @@
 <div class="subpage-backbar">
   <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Default Dashboard</a>
 </div>
-<div class="page-heading" style="margin-top:18px"><div><p class="eyebrow">COMMUNITY ACTIVITY</p><h1>Your alerts</h1></div></div><section class="panel">{% for notification in notifications %}<a class="list-row" href="{{ notification.link|default:'#' }}"><span><b>{{ notification.text }}</b><small>{{ notification.created_at|date:"M j, g:i A" }}</small></span><span>→</span></a>{% empty %}<p class="empty">You’re all caught up.</p>{% endfor %}</section>{% endblock %}
+<div class="page-heading" style="margin-top:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px">
+  <div>
+    <p class="eyebrow">COMMUNITY ACTIVITY</p>
+    <h1>Your alerts</h1>
+    <p class="subtle" style="margin:4px 0 0;font-size:13.5px">
+      {% if notifications_enabled %}
+        Email &amp; shared-notes notifications are currently <b>ON</b>. You will receive email alerts when PDFs or study notes are shared.
+      {% else %}
+        Email &amp; shared-notes notifications are currently <b>OFF</b>. Turn them ON anytime using the toggle in the top navbar or right here.
+      {% endif %}
+    </p>
+  </div>
+  <form method="post" action="{% url 'toggle_notifications' %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit" class="button small {% if not notifications_enabled %}secondary{% endif %}">
+      {% if notifications_enabled %}🔔 Notifications: ON (Click to Turn OFF){% else %}🔕 Notifications: OFF (Click to Turn ON){% endif %}
+    </button>
+  </form>
+</div>
+<section class="panel">{% for notification in notifications %}<a class="list-row" href="{{ notification.link|default:'#' }}"><span><b>{{ notification.text }}</b><small>{{ notification.created_at|date:"M j, g:i A" }}</small></span><span>→</span></a>{% empty %}<p class="empty">You’re all caught up.</p>{% endfor %}</section>{% endblock %}

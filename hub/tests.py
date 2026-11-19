@@ -576,6 +576,173 @@ class AcademicDoubtAndPointsLedgerTests(TestCase):
         forbidden_revoke = self.client.post(reverse("revoke_transaction", args=[tx.pk]), {"reason": "hack"})
         self.assertEqual(forbidden_revoke.status_code, 403)
 
+    def test_user_can_delete_own_general_talk_message(self):
+        from .models import DiscussionMessage
+
+        msg = DiscussionMessage.objects.create(
+            group=self.group,
+            author=self.asker,
+            body="Hello everyone, sorry wrong message!",
+        )
+        # Another user cannot delete asker's message
+        self.client.login(username="solver", password="strong-pass-123")
+        forbidden = self.client.post(reverse("delete_message", args=[msg.pk]))
+        self.assertEqual(forbidden.status_code, 403)
+        self.assertTrue(DiscussionMessage.objects.filter(pk=msg.pk).exists())
+
+        # Author can delete their own message
+        self.client.login(username="asker", password="strong-pass-123")
+        resp = self.client.post(
+            reverse("delete_message", args=[msg.pk]),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse(DiscussionMessage.objects.filter(pk=msg.pk).exists())
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_navbar_notification_toggle_and_pdf_notes_vs_general_chat_email(self):
+        self.asker.email = "asker@example.com"
+        self.asker.save()
+        self.solver.email = "solver@example.com"
+        self.solver.save()
+        self.other.email = "other@example.com"
+        self.other.save()
+
+        # Solver toggles notifications OFF via the navbar toggle endpoint
+        self.client.login(username="solver", password="strong-pass-123")
+        toggle_resp = self.client.post(
+            reverse("toggle_notifications"),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(toggle_resp.status_code, 200)
+        self.assertFalse(toggle_resp.json()["enabled"])
+        self.solver.profile.refresh_from_db()
+        self.assertFalse(self.solver.profile.email_notifications)
+
+        # Random General Talk chat message does NOT send email notifications
+        mail.outbox.clear()
+        self.client.login(username="asker", password="strong-pass-123")
+        self.client.post(reverse("post_message", args=[self.group.pk]), {"body": "Random casual chat message"})
+        self.assertEqual(len(mail.outbox), 0)
+
+        # Sharing a PDF / study note sends email ONLY to users with notifications ON (other), not solver (OFF)
+        mail.outbox.clear()
+        self.client.post(
+            reverse("material_create"),
+            {
+                "title": "Operating Systems Kernel Notes PDF",
+                "description": "Complete kernel scheduling & paging notes.",
+                "subject": "Computer Science",
+                "topic": "OS",
+                "material_type": "pdf",
+                "external_link": "https://example.com/os-kernel.pdf",
+            },
+        )
+        recipients = [addr for msg in mail.outbox for addr in msg.to]
+        self.assertIn("other@example.com", recipients)
+        self.assertNotIn("solver@example.com", recipients)
+
+    def test_collaborate_create_group_unique_id_invite_and_join_approval_flow(self):
+        from .models import GroupAccessRequest
+
+        # 1. Asker creates a group with only Group Name and Group Info
+        self.client.login(username="asker", password="strong-pass-123")
+        create_resp = self.client.post(
+            reverse("group_create"),
+            {
+                "name": "Algorithms & System Design Team",
+                "description": "Private squad for daily coding and doubt discussion.",
+                "from_collaborate": "1",
+            },
+        )
+        self.assertEqual(create_resp.status_code, 302)
+        custom_group = StudyGroup.objects.get(name="Algorithms & System Design Team")
+        self.assertTrue(custom_group.group_code.startswith("SS-"))
+        self.assertTrue(custom_group.members.filter(pk=self.asker.pk).exists())
+
+        # 2. Solver requests to join using the group's Unique Group ID
+        self.client.login(username="solver", password="strong-pass-123")
+        join_resp = self.client.post(
+            reverse("join_group_by_code"),
+            {"group_code": custom_group.group_code},
+        )
+        self.assertEqual(join_resp.status_code, 302)
+        self.assertFalse(custom_group.members.filter(pk=self.solver.pk).exists())
+        join_req = GroupAccessRequest.objects.get(
+            group=custom_group,
+            user=self.solver,
+            request_type=GroupAccessRequest.RequestType.JOIN_REQUEST,
+        )
+        self.assertEqual(join_req.status, GroupAccessRequest.Status.PENDING)
+
+        # 3. Group Admin (asker) approves Solver's join request
+        self.client.login(username="asker", password="strong-pass-123")
+        approve_resp = self.client.post(
+            reverse("respond_group_access_request", args=[join_req.pk]),
+            {"action": "accept"},
+        )
+        self.assertEqual(approve_resp.status_code, 302)
+        self.assertTrue(custom_group.members.filter(pk=self.solver.pk).exists())
+
+        # 4. Group Admin invites other_student by @username, and other_student accepts
+        invite_resp = self.client.post(
+            reverse("invite_to_group", args=[custom_group.pk]),
+            {"username": "@other_student"},
+        )
+        self.assertEqual(invite_resp.status_code, 302)
+        inv_req = GroupAccessRequest.objects.get(
+            group=custom_group,
+            user=self.other,
+            request_type=GroupAccessRequest.RequestType.INVITATION,
+        )
+        self.assertEqual(inv_req.status, GroupAccessRequest.Status.PENDING)
+
+        self.client.login(username="other_student", password="strong-pass-123")
+        accept_inv = self.client.post(
+            reverse("respond_group_access_request", args=[inv_req.pk]),
+            {"action": "accept"},
+        )
+        self.assertEqual(accept_inv.status_code, 302)
+        self.assertTrue(custom_group.members.filter(pk=self.other.pk).exists())
+
+        # 5. Visiting /groups/ while in a group redirects straight to the group workspace
+        collab_redirect = self.client.get(reverse("group_list"))
+        self.assertEqual(collab_redirect.status_code, 302)
+        self.assertIn(f"/groups/{custom_group.pk}/", collab_redirect["Location"])
+
+        # 6. Admin cannot leave without transferring Admin or deleting the group first
+        self.client.login(username="asker", password="strong-pass-123")
+        blocked_leave = self.client.post(reverse("leave_group", args=[custom_group.pk]))
+        self.assertEqual(blocked_leave.status_code, 302)
+        self.assertTrue(custom_group.members.filter(pk=self.asker.pk).exists())
+
+        # 7. Admin transfers Admin to solver, then leaves the group
+        transfer_resp = self.client.post(
+            reverse("transfer_group_admin", args=[custom_group.pk]),
+            {"new_admin_id": str(self.solver.pk)},
+        )
+        self.assertEqual(transfer_resp.status_code, 302)
+        custom_group.refresh_from_db()
+        self.assertEqual(custom_group.owner, self.solver)
+
+        leave_resp = self.client.post(reverse("leave_group", args=[custom_group.pk]))
+        self.assertEqual(leave_resp.status_code, 302)
+        self.assertFalse(custom_group.members.filter(pk=self.asker.pk).exists())
+
+        # Now visiting /groups/ shows the Create/Join page again (HTTP 200)
+        collab_page = self.client.get(reverse("group_list"))
+        self.assertEqual(collab_page.status_code, 200)
+
+        # 8. New Admin (solver) can delete the group
+        self.client.login(username="solver", password="strong-pass-123")
+        del_resp = self.client.post(reverse("delete_group", args=[custom_group.pk]))
+        self.assertEqual(del_resp.status_code, 302)
+        self.assertFalse(StudyGroup.objects.filter(pk=custom_group.pk).exists())
+
+
+
+
+
 
 
 

@@ -1,14 +1,136 @@
-{% extends 'base.html' %}{% block title %}Study groups | StudySphere{% endblock %}{% block content %}
-<div class="subpage-backbar">
+{% extends 'base.html' %}
+{% block title %}Collaborate | StudySphere{% endblock %}
+{% block content %}
+<div class="collab-page-wrap">
+  <div class="collab-top-header">
+    <h1 class="collab-title">Collaborate</h1>
+    <div class="collab-top-actions">
+      <a class="button small secondary" href="{% url 'dashboard' %}">← Dashboard</a>
+    </div>
+  </div>
+
   {% if user.is_authenticated %}
-  <a class="button small secondary" href="{% url 'dashboard' %}">← Back to Default Dashboard</a>
+    {% if pending_invitations %}
+      <div class="collab-alert-card invite-alert">
+        <div class="collab-alert-list">
+          {% for inv in pending_invitations %}
+            <div class="collab-req-row">
+              <div class="collab-req-info">
+                <strong>{{ inv.group.name }}</strong>
+                <span class="collab-id-chip">{{ inv.group.group_code }}</span>
+                <small>Invited by <b>@{{ inv.invited_by.username|default:inv.group.owner.username }}</b></small>
+              </div>
+              <div class="collab-req-btns">
+                <form method="post" action="{% url 'respond_group_access_request' inv.pk %}" class="inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="accept">
+                  <button type="submit" class="collab-btn-accept">✓ Join</button>
+                </form>
+                <form method="post" action="{% url 'respond_group_access_request' inv.pk %}" class="inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="reject">
+                  <button type="submit" class="collab-btn-reject">✕</button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="collab-hero-grid">
+      <!-- Create Group -->
+      <section class="collab-action-card create-card">
+        <div class="collab-card-accent"></div>
+        <div class="collab-card-head">
+          <div class="collab-card-icon create-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <line x1="19" y1="8" x2="19" y2="14"/>
+              <line x1="22" y1="11" x2="16" y2="11"/>
+            </svg>
+          </div>
+          <h2>Create Group</h2>
+        </div>
+
+        <form method="post" action="{% url 'group_create' %}" class="collab-form">
+          {% csrf_token %}
+          <div class="collab-field">
+            <label for="collab-group-name">Group Name</label>
+            <input
+              type="text"
+              id="collab-group-name"
+              name="name"
+              maxlength="150"
+              placeholder="Enter group name"
+              required
+            >
+          </div>
+          <div class="collab-field">
+            <label for="collab-group-info">Group Info</label>
+            <textarea
+              id="collab-group-info"
+              name="description"
+              rows="2"
+              placeholder="About this group"
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="collab-primary-btn">
+            Create Group
+          </button>
+        </form>
+      </section>
+
+      <!-- Join Group -->
+      <section class="collab-action-card join-card">
+        <div class="collab-card-accent join-accent"></div>
+        <div class="collab-card-head">
+          <div class="collab-card-icon join-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+            </svg>
+          </div>
+          <h2>Join Group</h2>
+        </div>
+
+        <form method="post" action="{% url 'join_group_by_code' %}" class="collab-form">
+          {% csrf_token %}
+          <div class="collab-field">
+            <label for="collab-group-code">Group ID</label>
+            <input
+              type="text"
+              id="collab-group-code"
+              name="group_code"
+              maxlength="20"
+              placeholder="SS-XXXXXX"
+              class="collab-code-input"
+              required
+            >
+          </div>
+          <button type="submit" class="collab-primary-btn join-btn">
+            Join Group
+          </button>
+        </form>
+
+        {% if my_pending_join_requests %}
+          <div class="collab-pending-box">
+            {% for pr in my_pending_join_requests %}
+              <div class="collab-pending-item">
+                <span><b>{{ pr.group.name }}</b> (<code>{{ pr.group.group_code }}</code>)</span>
+                <span class="collab-pending-status">Pending Admin Approval</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </section>
+    </div>
   {% else %}
-  <a class="button small secondary" href="{% url 'home' %}">← Back to Home</a>
-  {% endif %}
-  {% if user.is_authenticated %}
-  <a class="button small indigo" href="{% url 'global_chat' %}"><span class="live-dot"></span>Open Default GC</a>
+    <div class="collab-empty-card">
+      <h3>Sign in to create or join a study group</h3>
+      <a class="button" href="{% url 'login' %}">Sign In</a>
+    </div>
   {% endif %}
 </div>
-<div class="page-heading" style="margin-top:18px"><div><p class="eyebrow">COLLABORATE IN CONTEXT</p><h1>Study groups</h1></div>{% if user.is_authenticated %}<a class="button" href="{% url 'group_create' %}">+ Create group</a>{% endif %}</div>
-<div class="card-grid">{% for group in groups %}<article class="card group-card"><span class="tag warm">{{ group.subject }}</span><h3><a href="{% url 'group_detail' group.pk %}">{{ group.name }}</a></h3><p>{{ group.description|truncatechars:150 }}</p><div class="card-meta">{{ group.member_count }} member{{ group.member_count|pluralize }}</div></article>{% empty %}<p class="empty">No groups yet. Start one for your subject.</p>{% endfor %}</div>
 {% endblock %}

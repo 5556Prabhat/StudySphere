@@ -81,19 +81,77 @@ class MaterialReview(models.Model):
         ordering = ["-created_at"]
 
 
+import secrets
+import string
+
+
+def generate_unique_group_code():
+    alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    for _ in range(25):
+        code = "SS-" + "".join(secrets.choice(alphabet) for _ in range(6))
+        if not StudyGroup.objects.filter(group_code=code).exists():
+            return code
+    return "SS-" + "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+
+
 class StudyGroup(models.Model):
     name = models.CharField(max_length=150)
     description = models.TextField()
-    subject = models.CharField(max_length=120)
+    subject = models.CharField(max_length=120, default="General", blank=True)
+    group_code = models.CharField(max_length=16, unique=True, null=True, blank=True, db_index=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="owned_groups")
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, through="GroupMembership", related_name="study_groups")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["-created_at", "name"]
+
+    def save(self, *args, **kwargs):
+        if not self.group_code:
+            self.group_code = generate_unique_group_code()
+        if not self.subject:
+            self.subject = "General"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
+
+
+class GroupAccessRequest(models.Model):
+    class RequestType(models.TextChoices):
+        JOIN_REQUEST = "join_request", "Join Request (Admin Approval)"
+        INVITATION = "invitation", "User Invitation"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        ACCEPTED = "accepted", "Accepted"
+        REJECTED = "rejected", "Rejected"
+
+    group = models.ForeignKey(StudyGroup, on_delete=models.CASCADE, related_name="access_requests")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="group_access_requests")
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sent_group_invitations",
+    )
+    request_type = models.CharField(max_length=20, choices=RequestType.choices, default=RequestType.JOIN_REQUEST)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["group", "user", "request_type"],
+                name="unique_group_user_access_request",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.user} -> {self.group} ({self.request_type}: {self.status})"
 
 
 class GroupMembership(models.Model):
